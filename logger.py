@@ -21,7 +21,7 @@ class Logger:
     def log(self, global_step, **kwargs):
         msg=f"global_step: {global_step},"
         for k, v in kwargs.items():
-            msg+=f"{k}: {v},"
+            msg+=f"{k}: {v}, "
             self.writer.add_scalar(k, v, global_step)
             self.writer.flush()
         logging.info(msg)

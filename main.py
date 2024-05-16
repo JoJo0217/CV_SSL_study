@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--logdir", type=str, default="./logs")
     parser.add_argument("--logging_step", type=int, default=None)
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     return args
 
@@ -29,6 +30,7 @@ def main():
     args=parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
+    torch.manual_seed(args.seed)
     
     #load dataset
     trainloader = load_data(

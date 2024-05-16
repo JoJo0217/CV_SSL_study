@@ -42,7 +42,7 @@ def train(
         
         if(testloader is not None):
             acc = eval_model(model, testloader, device)
-            print(f"Epoch : {iter}, end loss: {total_loss}, acc: {acc}")
+            logger.log(global_step, epoch=iter, loss=total_loss, acc=acc)
         else:
-            print(f"Epoch : {iter}, end loss: {total_loss}")
+            logger.log(global_step=global_step, epoch=iter, loss=total_loss)
     return model
