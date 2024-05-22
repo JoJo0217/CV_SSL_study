@@ -1,5 +1,12 @@
 python3 main.py \
-    --model resnet18B \
-    --logdir ./logs/ \
+    --model resnet18 \
+    --dataset cifar100 \
+    --optimizer sgd \
+    --lr 0.1 \
+    --weight_decay 0.0001 \
+    --momentum 0.9 \
+    --scheduler reduce_on_plateau \
     --batch_size 128 \
-    --logging_step 100 \
+    --logging_step 10 \
+    --epoch 10 \
+    --logdir ./logs_sgd_plateau/ \
