@@ -108,7 +108,6 @@ class PreActResNet(nn.Sequential):
     def __init__(self, class_num=10):
         super().__init__(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(64),
             nn.ReLU(),
             PreActResBlock(64, 64),
             PreActResBlock(64, 64),
@@ -118,6 +117,7 @@ class PreActResNet(nn.Sequential):
             PreActResBlock(256, 256),
             PreActResBlock(256, 512, is_downsample=True),
             PreActResBlock(512, 512),
+            nn.ReLU(),
             nn.AvgPool2d(4),
             nn.Flatten(),
             nn.Linear(512, class_num),
