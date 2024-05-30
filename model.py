@@ -124,10 +124,63 @@ class PreActResNet(nn.Sequential):
         )
 
 
+class ResNextBlock(nn.Module):
+    def __init__(self, in_channel, inner_channel, out_channel, cardinality=32, is_downsample=False, stride=None):
+        super().__init__()
+        if stride is None:
+            stride = 2 if is_downsample else 1
+        self.seq = nn.Sequential(
+            nn.Conv2d(in_channel, inner_channel, kernel_size=1, bias=False),
+            nn.BatchNorm2d(inner_channel),
+            nn.ReLU(),
+            nn.Conv2d(inner_channel, inner_channel, kernel_size=3,
+                      stride=stride, padding=1, groups=cardinality, bias=False),
+            nn.BatchNorm2d(inner_channel),
+            nn.ReLU(),
+            nn.Conv2d(inner_channel, out_channel, kernel_size=1, bias=False),
+            nn.BatchNorm2d(out_channel),
+        )
+
+        if is_downsample:
+            self.downsample = nn.Sequential(
+                nn.Conv2d(in_channel, out_channel, kernel_size=1,
+                          stride=stride, bias=False),
+                nn.BatchNorm2d(out_channel),
+            )
+        else:
+            self.downsample = nn.Identity()
+
+    def forward(self, x):
+        return F.relu(self.seq(x) + self.downsample(x))
+
+
+class ResNext(nn.Sequential):
+    def __init__(self, class_num=10):
+        super().__init__(
+            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1,
+                      bias=False),  # 3,32,32 -> 64,32,32
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            ResNextBlock(64, 128, 256, is_downsample=True,
+                         stride=1),     # 256,32,32 -> feature size를 유지하고 64를 256으로 증가시키기 위함
+            ResNextBlock(256, 128, 256),
+            ResNextBlock(256, 256, 512, is_downsample=True),  # 512 16x16
+            ResNextBlock(512, 256, 512),
+            ResNextBlock(512, 512, 1024, is_downsample=True),  # 1024 8x8
+            ResNextBlock(1024, 512, 1024),
+            ResNextBlock(1024, 1024, 2048, is_downsample=True),  # 2048 4x4
+            ResNextBlock(2048, 1024, 2048),
+            nn.AvgPool2d(4),
+            nn.Flatten(),
+            nn.Linear(2048, class_num),
+        )
+
+
 MODELS = {
     "lenet5": Lenet5,
     "resnet18": Resnet18,
     "resnet18preact": PreActResNet,
+    "resnext": ResNext,
 }
 
 

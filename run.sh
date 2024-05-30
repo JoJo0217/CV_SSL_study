@@ -1,5 +1,5 @@
 python3 main.py \
-    --model resnet18preact \
+    --model resnet18 \
     --dataset cifar10 \
     --optimizer sgd \
     --lr 0.01 \
@@ -9,4 +9,4 @@ python3 main.py \
     --batch_size 128 \
     --logging_step 10 \
     --epoch 10 \
-    --logdir ./logs_sgd_plateau_preact_later_BN_first_relu_only_lastrelu_lr_0.01/ \
+    --logdir ./log_resnet18_0.01/ \
