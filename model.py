@@ -132,6 +132,34 @@ class ResBottleNecknet18(nn.Sequential):
         )
 
 
+class ResBottleNecknet50(nn.Sequential):
+    def __init__(self, class_num=10):
+        super().__init__(
+            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            ResBottleNeckBlock(64, 256, is_downsample=True, stride=1),
+            ResBottleNeckBlock(256, 256),
+            ResBottleNeckBlock(256, 256),
+            ResBottleNeckBlock(256, 512, is_downsample=True),
+            ResBottleNeckBlock(512, 512),
+            ResBottleNeckBlock(512, 512),
+            ResBottleNeckBlock(512, 512),
+            ResBottleNeckBlock(512, 1024, is_downsample=True),
+            ResBottleNeckBlock(1024, 1024),
+            ResBottleNeckBlock(1024, 1024),
+            ResBottleNeckBlock(1024, 1024),
+            ResBottleNeckBlock(1024, 1024),
+            ResBottleNeckBlock(1024, 1024),
+            ResBottleNeckBlock(1024, 2048, is_downsample=True),
+            ResBottleNeckBlock(2048, 2048),
+            ResBottleNeckBlock(2048, 2048),
+            nn.AvgPool2d(4),
+            nn.Flatten(),
+            nn.Linear(2048, class_num),
+        )
+
+
 # preactive paper https://arxiv.org/abs/1603.05027 -> option preactive
 class PreActResBlock(nn.Module):
     def __init__(self, in_channel, out_channel, is_downsample=False):
@@ -240,6 +268,7 @@ MODELS = {
     "lenet5": Lenet5,
     "resnet18": Resnet18,
     "resnet18bottleneck": ResBottleNecknet18,
+    "resnet50bottleneck": ResBottleNecknet50,
     "resnet18preact": PreActResNet,
     "resnext": ResNext,
 }

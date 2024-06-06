@@ -4,15 +4,15 @@ import torch.optim as optim
 
 OPTIMIZERS = {
     "adam": optim.Adam,
-    "sgd": optim.SGD
+    "sgd": optim.SGD,
 }
 
 CRITERIONS = {
-    "cross_entropy": nn.CrossEntropyLoss
+    "cross_entropy": nn.CrossEntropyLoss,
 }
 
 SCHEDULERS = {
-    "reduce_on_plateau": optim.lr_scheduler.ReduceLROnPlateau
+    "reduce_on_plateau": optim.lr_scheduler.ReduceLROnPlateau,
     "multi_step": optim.lr_scheduler.MultiStepLR
 }
 
