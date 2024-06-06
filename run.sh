@@ -1,5 +1,5 @@
 python3 main.py \
-    --model resnet18 \
+    --model resnet18bottleneck \
     --dataset cifar10 \
     --optimizer sgd \
     --lr 0.01 \
@@ -9,4 +9,4 @@ python3 main.py \
     --batch_size 128 \
     --logging_step 10 \
     --epoch 10 \
-    --logdir ./log_resnet18_0.01/ \
+    --logdir ./log_resnet18bottleneck_0.01/ \
