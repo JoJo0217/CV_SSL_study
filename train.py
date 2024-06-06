@@ -3,6 +3,8 @@ from tqdm import tqdm
 from logger import Logger
 from evaluate import eval_model
 
+AFTER_EPOCH_SCHEDULER = ["reduce_on_plateau", "multi_step"]
+
 
 def train(
         model, criterion, optimizer,
@@ -39,8 +41,11 @@ def train(
             global_step += 1
 
         total_loss /= len(trainloader)
-        if scheduler is not None and scheduer_type == "reduce_on_plateau":
-            scheduler.step(total_loss)
+        if scheduler is not None and scheduer_type in AFTER_EPOCH_SCHEDULER:
+            if scheduer_type == "reduce_on_plateau":
+                scheduler.step(total_loss)
+            else:
+                scheduler.step()
 
         if (testloader is not None):
             acc = eval_model(model, testloader, device)

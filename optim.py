@@ -13,6 +13,7 @@ CRITERIONS = {
 
 SCHEDULERS = {
     "reduce_on_plateau": optim.lr_scheduler.ReduceLROnPlateau
+    "multi_step": optim.lr_scheduler.MultiStepLR
 }
 
 
@@ -39,5 +40,7 @@ def load_scheduler(name, optimizer):
         return None
     if name == "reduce_on_plateau":
         return SCHEDULERS[name](optimizer, verbose=True)
+    if name == "multi_step":
+        return SCHEDULERS[name](optimizer, milestones=[100, 150], gamma=0.1)
     if name not in SCHEDULERS:
         raise Exception("Unknown scheduler name")

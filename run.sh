@@ -2,11 +2,11 @@ python3 main.py \
     --model resnet18bottleneck \
     --dataset cifar10 \
     --optimizer sgd \
-    --lr 0.01 \
+    --lr 0.1 \
     --weight_decay 0.0001 \
     --momentum 0.9 \
-    --scheduler reduce_on_plateau \
+    --scheduler multi_step \
     --batch_size 128 \
     --logging_step 10 \
-    --epoch 10 \
+    --epoch 200 \
     --logdir ./log_resnet18bottleneck_0.01/ \
