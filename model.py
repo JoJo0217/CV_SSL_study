@@ -263,7 +263,7 @@ class ResNext(nn.Sequential):
             nn.Linear(2048, class_num),
         )
 
-
+# attention is all you need paper https://arxiv.org/pdf/1706.03762
 class scaled_dot_product_attention(nn.Module):
     def __init__(self):
         super().__init__()
@@ -313,7 +313,7 @@ class multi_head_Attention(nn.Module):
         # Q, K, V shape: (batch, num_head, seq_len, d_model//num_head)
         output = self.scaled_dot_product_attention(Q, K, V)
         # output shape: (batch, num_head, seq_len, d_model//num_head)
-        output = output.transpose(1, 2).contiguous().view(x.size(0), -1, self.d_model)
+        output = output.transpose(1, 2).reshape(x.size(0), -1, self.d_model)
         output = self.out(output)
         return output
         
