@@ -29,7 +29,7 @@ def eval_model(model, dataloader, device):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("사용법: python3 eval.py [경로]")
+        print("사용법: python3 evaluate.py [경로]")
         sys.exit(1)
     path = sys.argv[1]
 
