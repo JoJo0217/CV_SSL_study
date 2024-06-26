@@ -4,6 +4,7 @@ import torch.optim as optim
 
 OPTIMIZERS = {
     "adam": optim.Adam,
+    "adamw": optim.AdamW,
     "sgd": optim.SGD,
 }
 
@@ -13,7 +14,8 @@ CRITERIONS = {
 
 SCHEDULERS = {
     "reduce_on_plateau": optim.lr_scheduler.ReduceLROnPlateau,
-    "multi_step": optim.lr_scheduler.MultiStepLR
+    "multi_step": optim.lr_scheduler.MultiStepLR,
+    "cos_annealing": optim.lr_scheduler.CosineAnnealingLR,
 }
 
 

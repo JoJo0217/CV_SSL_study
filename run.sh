@@ -1,12 +1,12 @@
 python3 main.py \
-    --model resnet18bottleneck \
+    --model ViT \
     --dataset cifar10 \
-    --optimizer sgd \
-    --lr 0.1 \
-    --weight_decay 0.0001 \
-    --momentum 0.9 \
-    --scheduler multi_step \
-    --batch_size 128 \
-    --logging_step 10 \
-    --epoch 200 \
-    --logdir ./log_resnet18bottleneck_0.01/ \
+    --optimizer adamw \
+    --lr 0.01 \
+    --weight_decay 0.1 \
+    --scheduler cos_annealing \
+    --T_max 100 \
+    --batch_size 512 \
+    --logging_step 1 \
+    --epoch 300 \
+    --logdir ./log_vit_0.01/ \

@@ -3,7 +3,11 @@ from tqdm import tqdm
 from logger import Logger
 from evaluate import eval_model
 
-AFTER_EPOCH_SCHEDULER = ["reduce_on_plateau", "multi_step"]
+AFTER_EPOCH_SCHEDULER = [
+    "reduce_on_plateau",
+    "multi_step",
+    "cos_annealing"
+]
 
 
 def train(
@@ -36,7 +40,8 @@ def train(
             total_loss += loss.item()
 
             if logging_step is not None and global_step != 0 and (global_step % logging_step) == 0:
-                logger.log(global_step, loss=log_running_loss/logging_step)
+                logger.log(global_step, loss=log_running_loss /
+                           logging_step, lr=optimizer.param_groups[0]["lr"])
                 log_running_loss = 0
             global_step += 1
 
@@ -49,7 +54,9 @@ def train(
 
         if (testloader is not None):
             acc = eval_model(model, testloader, device)
-            logger.log(global_step, epoch=iter, loss=total_loss, acc=acc)
+            logger.log(global_step, epoch=iter, loss=total_loss,
+                       acc=acc, lr=optimizer.param_groups[0]["lr"])
         else:
-            logger.log(global_step, epoch=iter, loss=total_loss)
+            logger.log(global_step, epoch=iter, loss=total_loss,
+                       lr=optimizer.param_groups[0]["lr"])
     return model

@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--momentum", type=float, default=None)
     parser.add_argument("--weight_decay", type=float, default=None)
+    parser.add_argument("--T_max", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--logdir", type=str, default="./logs")
     parser.add_argument("--logging_step", type=int, default=None)
@@ -55,7 +56,7 @@ def main():
     model = model.to(device)
     criterion = load_criterion(args.criterion)
     optimizer = load_optimizer(
-        args.optimizer, model, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+        args.optimizer, model, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay, T_max=args.T_max)
     scheduler = load_scheduler(args.scheduler, optimizer)
     # train
     logger = Logger(args.logdir)

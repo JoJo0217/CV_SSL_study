@@ -1,6 +1,6 @@
 from models import lenet
 from models import resnet
-
+from models import transformer
 
 MODELS = {
     "lenet5": lenet.Lenet5,
@@ -9,6 +9,7 @@ MODELS = {
     "resnet50bottleneck": resnet.ResBottleNecknet50,
     "resnet18preact": resnet.PreActResNet,
     "resnext": resnet.ResNext,
+    "ViT": transformer.ViT,
 }
 
 
