@@ -37,12 +37,14 @@ def load_criterion(name):
     return CRITERIONS[name]()
 
 
-def load_scheduler(name, optimizer):
+def load_scheduler(name, optimizer, args):
     if name == None:
         return None
     if name == "reduce_on_plateau":
         return SCHEDULERS[name](optimizer, verbose=True)
     if name == "multi_step":
         return SCHEDULERS[name](optimizer, milestones=[100, 150], gamma=0.1)
+    if name == "cos_annealing":
+        return SCHEDULERS[name](optimizer, T_max=args.T_max)
     if name not in SCHEDULERS:
         raise Exception("Unknown scheduler name")

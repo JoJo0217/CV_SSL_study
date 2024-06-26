@@ -57,7 +57,7 @@ def main():
     criterion = load_criterion(args.criterion)
     optimizer = load_optimizer(
         args.optimizer, model, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay, T_max=args.T_max)
-    scheduler = load_scheduler(args.scheduler, optimizer)
+    scheduler = load_scheduler(args.scheduler, optimizer, args)
     # train
     logger = Logger(args.logdir)
     logger.log(0, is_tensor_board=False, **vars(args))
