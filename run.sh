@@ -6,7 +6,7 @@ python3 main.py \
     --weight_decay 0.1 \
     --scheduler cos_annealing \
     --T_max 100 \
-    --batch_size 512 \
-    --logging_step 1 \
+    --batch_size 64 \
+    --logging_step 10 \
     --epoch 300 \
     --logdir ./log_vit_0.01/ \

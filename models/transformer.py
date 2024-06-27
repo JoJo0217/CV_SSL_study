@@ -94,6 +94,9 @@ class ViT(nn.Module):
         self.pos_embedding = nn.Parameter(
             torch.randn(1, self.num_patch+1, d_model))
 
+        nn.init.xavier_uniform_(self.cls_token)
+        nn.init.xavier_uniform_(self.pos_embedding)
+
     def forward(self, x):
         # input shape: (batch, 3, 32, 32)
         # 이미지를 patch로 나누기

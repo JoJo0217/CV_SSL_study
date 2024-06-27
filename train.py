@@ -14,7 +14,8 @@ def train(
         model, criterion, optimizer,
         epoch, trainloader, testloader=None,
         device=None, logging_step=None,
-        logger=None, scheduler=None, scheduer_type=None):
+        logger=None, scheduler=None, scheduer_type=None,
+        grad_clip=None):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model.to(device)
@@ -34,6 +35,10 @@ def train(
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
+
+            if grad_clip is not None:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+
             optimizer.step()
 
             log_running_loss += loss.item()

@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument("--epoch", type=int, default=10)
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--momentum", type=float, default=None)
+    parser.add_argument("--grad_clip", type=float, default=None)
     parser.add_argument("--weight_decay", type=float, default=None)
     parser.add_argument("--T_max", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=64)
@@ -73,6 +74,7 @@ def main():
         logger=logger,
         scheduler=scheduler,
         scheduer_type=args.scheduler,
+        grad_clip=args.grad_clip,
     )
     print("finish training")
 
