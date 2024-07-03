@@ -10,6 +10,7 @@ MODELS = {
     "resnet18preact": resnet.PreActResNet,
     "resnext": resnet.ResNext,
     "ViT": transformer.ViT,
+    "convnext": resnet.ConvNeXt,
 }
 
 

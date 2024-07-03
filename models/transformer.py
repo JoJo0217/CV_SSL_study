@@ -75,6 +75,7 @@ class Encoder_block(nn.Module):
         return x
 
 
+# ViT paper https://arxiv.org/pdf/2010.11929
 class ViT(nn.Module):
     def __init__(self, class_num=10, d_model=384, num_head=6, img_size=32, patch_size=4, num_block=6):
         super().__init__()

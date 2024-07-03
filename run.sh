@@ -1,12 +1,12 @@
 python3 main.py \
-    --model ViT \
+    --model convnext \
     --dataset cifar10 \
     --optimizer adamw \
     --lr 0.01 \
     --weight_decay 0.1 \
     --scheduler cos_annealing \
-    --T_max 100 \
+    --T_max 300 \
     --batch_size 64 \
     --logging_step 10 \
     --epoch 300 \
-    --logdir ./log_vit_0.01/ \
+    --logdir ./log_convnext_0.01/ \

@@ -244,3 +244,50 @@ class ResNext(nn.Sequential):
             nn.Flatten(),
             nn.Linear(2048, class_num),
         )
+
+
+# convnext paper: https://arxiv.org/pdf/2201.03545
+class ConvNeXtblock(nn.Module):
+    def __init__(self, in_channel, out_channel, image_size):
+        super().__init__()
+        self.in_channel = in_channel
+        self.out_channel = out_channel
+
+        if in_channel != out_channel:
+            self.downsample = nn.Conv2d(
+                in_channel, out_channel, kernel_size=2, stride=2)
+
+        self.seq = nn.Sequential(
+            nn.Conv2d(out_channel, out_channel, kernel_size=7,
+                      padding=3, groups=out_channel),
+            nn.LayerNorm([out_channel, image_size, image_size]),
+            nn.Conv2d(out_channel, out_channel*4, kernel_size=1),
+            nn.GELU(),
+            nn.Conv2d(out_channel*4, out_channel, kernel_size=1),
+        )
+
+    def forward(self, x):
+        if self.in_channel != self.out_channel:
+            x = self.downsample(x)
+        return self.seq(x) + x
+
+
+class ConvNeXt(nn.Sequential):
+    def __init__(self, class_num=10):
+        super().__init__(
+            # 원본은 kernel 4 stride 4 지금은 2 2로 변경
+            nn.Conv2d(3, 96, kernel_size=2, stride=2, padding=0,
+                      bias=False),  # 3x32x32 -> 96x16x16
+            # 블럭 비율 1:1:3:1이 되어야 하지만 원본과 비교를 위해 1:1:1:1로 구현
+            ConvNeXtblock(96, 96, image_size=16),
+            ConvNeXtblock(96, 96, image_size=16),
+            ConvNeXtblock(96, 192, image_size=8),  # 96x16x16 -> 192x8x8
+            ConvNeXtblock(192, 192, image_size=8),
+            ConvNeXtblock(192, 384, image_size=4),  # 192x8x8 -> 384x4x4
+            ConvNeXtblock(384, 384, image_size=4),
+            ConvNeXtblock(384, 768, image_size=2),  # 384x4x4 -> 768x2x2
+            ConvNeXtblock(768, 768, image_size=2),
+            nn.AvgPool2d(2),  # 768x2x2 -> 768x1x1
+            nn.Flatten(),
+            nn.Linear(768, class_num),
+        )
