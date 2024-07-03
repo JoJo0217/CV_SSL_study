@@ -278,12 +278,16 @@ class ConvNeXt(nn.Sequential):
             # 원본은 kernel 4 stride 4 지금은 2 2로 변경
             nn.Conv2d(3, 96, kernel_size=2, stride=2, padding=0,
                       bias=False),  # 3x32x32 -> 96x16x16
-            # 블럭 비율 1:1:3:1이 되어야 하지만 원본과 비교를 위해 1:1:1:1로 구현
+            # 블럭 비율 1:1:3:1 -> 2:2:6:2
             ConvNeXtblock(96, 96, image_size=16),
             ConvNeXtblock(96, 96, image_size=16),
             ConvNeXtblock(96, 192, image_size=8),  # 96x16x16 -> 192x8x8
             ConvNeXtblock(192, 192, image_size=8),
             ConvNeXtblock(192, 384, image_size=4),  # 192x8x8 -> 384x4x4
+            ConvNeXtblock(384, 384, image_size=4),
+            ConvNeXtblock(384, 384, image_size=4),
+            ConvNeXtblock(384, 384, image_size=4),
+            ConvNeXtblock(384, 384, image_size=4),
             ConvNeXtblock(384, 384, image_size=4),
             ConvNeXtblock(384, 768, image_size=2),  # 384x4x4 -> 768x2x2
             ConvNeXtblock(768, 768, image_size=2),
