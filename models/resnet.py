@@ -251,11 +251,11 @@ class ConvNeXtblock(nn.Module):
     def __init__(self, channel):
         super().__init__()
         self.depth_wise = nn.Conv2d(channel, channel, kernel_size=7,
-                                    padding=3, groups=channel),
+                                    padding=3, groups=channel)
         self.norm = nn.LayerNorm(channel)
-        self.point_wise1 = nn.Conv2d(channel, channel*4, kernel_size=1),
-        self.gelu = nn.GELU(),
-        self.point_wise2 = nn.Conv2d(channel*4, channel, kernel_size=1),
+        self.point_wise1 = nn.Conv2d(channel, channel*4, kernel_size=1)
+        self.gelu = nn.GELU()
+        self.point_wise2 = nn.Conv2d(channel*4, channel, kernel_size=1)
 
         nn.init.zeros_(self.point_wise2.weight)
         if self.point_wise2.bias is not None:

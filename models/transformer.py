@@ -37,7 +37,7 @@ class multi_head_Attention(nn.Module):
         self.scaled_dot_product_attention = scaled_dot_product_attention()
         self.out = nn.Linear(d_model, d_model)
 
-        nn.init.zeros_(self.out)
+        nn.init.zeros_(self.out.weight)
         if self.out.bias is not None:
             nn.init.zeros_(self.out.bias)
 
