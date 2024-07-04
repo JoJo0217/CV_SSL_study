@@ -37,6 +37,10 @@ class multi_head_Attention(nn.Module):
         self.scaled_dot_product_attention = scaled_dot_product_attention()
         self.out = nn.Linear(d_model, d_model)
 
+        nn.init.zeros_(self.out)
+        if self.out.bias is not None:
+            nn.init.zeros_(self.out.bias)
+
     def forward(self, x):
         # x shape: (batch, seq_len, d_model)
         Q = self.Q(x)
@@ -63,11 +67,15 @@ class Encoder_block(nn.Module):
         self.dropout1 = nn.Dropout(dropout)
         self.FFN = nn.Sequential(
             nn.Linear(d_model, d_model*4),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(d_model*4, d_model)
         )
         self.norm2 = nn.LayerNorm(d_model)
         self.dropout2 = nn.Dropout(dropout)
+
+        nn.init.zeros_(self.FFN[-1].weight)
+        if self.FFN[-1].bias is not None:
+            nn.init.zeros_(self.FFN[-1].bias)
 
     def forward(self, x):
         x = x + self.dropout1(self.attention(self.norm1(x)))

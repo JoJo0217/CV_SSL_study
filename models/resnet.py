@@ -248,28 +248,29 @@ class ResNext(nn.Sequential):
 
 # convnext paper: https://arxiv.org/pdf/2201.03545
 class ConvNeXtblock(nn.Module):
-    def __init__(self, in_channel, out_channel, image_size):
+    def __init__(self, channel):
         super().__init__()
-        self.in_channel = in_channel
-        self.out_channel = out_channel
+        self.depth_wise = nn.Conv2d(channel, channel, kernel_size=7,
+                                    padding=3, groups=channel),
+        self.norm = nn.LayerNorm(channel)
+        self.point_wise1 = nn.Conv2d(channel, channel*4, kernel_size=1),
+        self.gelu = nn.GELU(),
+        self.point_wise2 = nn.Conv2d(channel*4, channel, kernel_size=1),
 
-        if in_channel != out_channel:
-            self.downsample = nn.Conv2d(
-                in_channel, out_channel, kernel_size=2, stride=2)
-
-        self.seq = nn.Sequential(
-            nn.Conv2d(out_channel, out_channel, kernel_size=7,
-                      padding=3, groups=out_channel),
-            nn.LayerNorm([out_channel, image_size, image_size]),
-            nn.Conv2d(out_channel, out_channel*4, kernel_size=1),
-            nn.GELU(),
-            nn.Conv2d(out_channel*4, out_channel, kernel_size=1),
-        )
+        nn.init.zeros_(self.point_wise2.weight)
+        if self.point_wise2.bias is not None:
+            nn.init.zeros_(self.point_wise2.bias)
 
     def forward(self, x):
-        if self.in_channel != self.out_channel:
-            x = self.downsample(x)
-        return self.seq(x) + x
+        residual = x
+        x = self.depth_wise(x)
+        x = x.permute(0, 2, 3, 1)  # BCWH -> BWHC
+        x = self.norm(x)
+        x = x.permute(0, 3, 1, 2)  # BWHC -> BCWH
+        x = self.point_wise1(x)
+        x = self.gelu(x)
+        x = self.point_wise2(x)
+        return x+residual
 
 
 class ConvNeXt(nn.Sequential):
@@ -279,18 +280,21 @@ class ConvNeXt(nn.Sequential):
             nn.Conv2d(3, 96, kernel_size=2, stride=2, padding=0,
                       bias=False),  # 3x32x32 -> 96x16x16
             # 블럭 비율 1:1:3:1 -> 2:2:6:2
-            ConvNeXtblock(96, 96, image_size=16),
-            ConvNeXtblock(96, 96, image_size=16),
-            ConvNeXtblock(96, 192, image_size=8),  # 96x16x16 -> 192x8x8
-            ConvNeXtblock(192, 192, image_size=8),
-            ConvNeXtblock(192, 384, image_size=4),  # 192x8x8 -> 384x4x4
-            ConvNeXtblock(384, 384, image_size=4),
-            ConvNeXtblock(384, 384, image_size=4),
-            ConvNeXtblock(384, 384, image_size=4),
-            ConvNeXtblock(384, 384, image_size=4),
-            ConvNeXtblock(384, 384, image_size=4),
-            ConvNeXtblock(384, 768, image_size=2),  # 384x4x4 -> 768x2x2
-            ConvNeXtblock(768, 768, image_size=2),
+            ConvNeXtblock(96),
+            ConvNeXtblock(96),
+            nn.Conv2d(96, 192, kernel_size=2, stride=2),
+            ConvNeXtblock(192),  # 96x16x16 -> 192x8x8
+            ConvNeXtblock(192),
+            nn.Conv2d(192, 384, kernel_size=2, stride=2),
+            ConvNeXtblock(384,),  # 192x8x8 -> 384x4x4
+            ConvNeXtblock(384,),
+            ConvNeXtblock(384,),
+            ConvNeXtblock(384,),
+            ConvNeXtblock(384,),
+            ConvNeXtblock(384,),
+            nn.Conv2d(384, 768, kernel_size=2, stride=2),
+            ConvNeXtblock(768),  # 384x4x4 -> 768x2x2
+            ConvNeXtblock(768),
             nn.AvgPool2d(2),  # 768x2x2 -> 768x1x1
             nn.Flatten(),
             nn.Linear(768, class_num),
