@@ -21,6 +21,13 @@ class MixerLayer(nn.Module):
             nn.Linear(d_channel, d_channel)
         )
 
+        nn.init.zeros_(self.token_mlp[-1].weight)
+        if self.token_mlp[-1].bias is not None:
+            nn.init.zeros_(self.token_mlp[-1].bias)
+        nn.init.zeros_(self.channel_mlp[-1].weight)
+        if self.channel_mlp[-1].bias is not None:
+            nn.init.zeros_(self.channel_mlp[-1].bias)
+
     def forward(self, x):
         # x shape: (batch, d_token, d_channel)
         residual = x
