@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 # attention is all you need paper https://arxiv.org/pdf/1706.03762
-class scaled_dot_product_attention(nn.Module):
+class ScaledDotProductAttention(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -24,7 +24,7 @@ class scaled_dot_product_attention(nn.Module):
         return output
 
 
-class multi_head_Attention(nn.Module):
+class MultiHeadAttention(nn.Module):
     def __init__(self, d_model=512, num_head=8):
         super().__init__()
         self.d_model = d_model
@@ -34,7 +34,7 @@ class multi_head_Attention(nn.Module):
         self.Q = nn.Linear(d_model, d_model)
         self.K = nn.Linear(d_model, d_model)
         self.V = nn.Linear(d_model, d_model)
-        self.scaled_dot_product_attention = scaled_dot_product_attention()
+        self.ScaledDotProductAttention = ScaledDotProductAttention()
         self.out = nn.Linear(d_model, d_model)
 
         nn.init.zeros_(self.out.weight)
@@ -52,17 +52,17 @@ class multi_head_Attention(nn.Module):
         K = K.view(K.size(0), K.size(1), -1, self.d_k).transpose(1, 2)
         V = V.view(V.size(0), V.size(1), -1, self.d_k).transpose(1, 2)
         # Q, K, V shape: (batch, num_head, seq_len, d_model//num_head)
-        output = self.scaled_dot_product_attention(Q, K, V)
+        output = self.ScaledDotProductAttention(Q, K, V)
         # output shape: (batch, num_head, seq_len, d_model//num_head)
         output = output.transpose(1, 2).reshape(x.size(0), -1, self.d_model)
         output = self.out(output)
         return output
 
 
-class Encoder_block(nn.Module):
+class EncoderBlock(nn.Module):
     def __init__(self, d_model=512, num_head=8, dropout=0.1):
         super().__init__()
-        self.attention = multi_head_Attention(d_model, num_head)
+        self.attention = MultiHeadAttention(d_model, num_head)
         self.norm1 = nn.LayerNorm(d_model)
         self.dropout1 = nn.Dropout(dropout)
         self.FFN = nn.Sequential(
@@ -92,7 +92,7 @@ class ViT(nn.Module):
         self.d_model = d_model
         self.num_head = num_head  # 각 head마다 d_k=d_v=64
 
-        self.layers = nn.ModuleList([Encoder_block(d_model, num_head)
+        self.layers = nn.ModuleList([EncoderBlock(d_model, num_head)
                                      for _ in range(num_block)])
         self.out = nn.Linear(d_model, class_num)
 
