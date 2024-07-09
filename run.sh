@@ -1,5 +1,5 @@
-python3 main.py \
-    --model mlpmixer \
+CUDA_VISIBLE_DEVICES=0 python3 main.py \
+    --model attentionmixer \
     --dataset cifar10 \
     --optimizer adamw \
     --lr 0.001 \
@@ -9,4 +9,4 @@ python3 main.py \
     --batch_size 64 \
     --logging_step 10 \
     --epoch 300 \
-    --logdir ./log_mlpmixer_0.001/ \
+    --logdir ./log_attentionmixer_0.001/ \
