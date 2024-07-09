@@ -78,8 +78,8 @@ class EncoderBlock(nn.Module):
             nn.init.zeros_(self.FFN[-1].bias)
 
     def forward(self, x):
-        x = x + self.dropout1(self.attention(self.norm1(x)))
-        x = x + self.dropout2(self.FFN(self.norm2(x)))
+        x = x + self.dropout1(self.norm1(self.attention(x)))
+        x = x + self.dropout2(self.norm2(self.FFN(x)))
         return x
 
 
