@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
-    --model attentionmixer \
+    --model vit \
     --dataset cifar10 \
     --optimizer adamw \
     --lr 0.001 \
@@ -9,4 +9,4 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --batch_size 64 \
     --logging_step 10 \
     --epoch 300 \
-    --logdir ./log_attentionmixer_0.001/ \
+    --logdir ./log_vit_0.001/ \

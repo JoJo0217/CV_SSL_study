@@ -10,7 +10,8 @@ DATASETS = {
 }
 
 basic_transform = [
-    transforms.Resize((32, 32)),
+    transforms.RandomResizedCrop((32, 32)),
+    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ]
