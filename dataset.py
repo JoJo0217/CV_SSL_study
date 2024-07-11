@@ -9,14 +9,26 @@ DATASETS = {
     "stl10": torchvision.datasets.STL10,
 }
 
-basic_transform = [
+train_transform = [
     transforms.RandomResizedCrop((32, 32)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ]
 
-TRANSFORMS = {
+basic_transform = [
+    transforms.Resize((32, 32)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+]
+
+TRAIN_TRANSFORMS = {
+    "cifar10": transforms.Compose(train_transform),
+    "cifar100": transforms.Compose(train_transform),
+    "stl10": transforms.Compose(train_transform),
+}
+
+TEST_TRANSFORMS = {
     "cifar10": transforms.Compose(basic_transform),
     "cifar100": transforms.Compose(basic_transform),
     "stl10": transforms.Compose(basic_transform),
@@ -32,7 +44,11 @@ def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=
     if name not in DATASETS:
         raise Exception("Unknown dataset name")
     dataset_class = DATASETS[name]
-    transform = TRANSFORMS[name]
+    if train is True:
+        transform = TRAIN_TRANSFORMS[name]
+    else:
+        transform = TEST_TRANSFORMS[name]
+
     class_num = CLASSNUM[name]
 
     dataset = dataset_class(root=root, train=train,
