@@ -88,7 +88,7 @@ class ConvMixerLayer(nn.Module):
 
 
 class ConvMixer(nn.Module):
-    def __init__(self, image_size=32, patch_size=4, channel_size=3, num_layer=8, d_channel=768, class_num=10):
+    def __init__(self, image_size=32, patch_size=2, channel_size=3, num_layer=8, d_channel=256, class_num=10):
         super().__init__()
         self.channel_size = channel_size
         self.image_size = image_size
