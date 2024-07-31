@@ -40,7 +40,7 @@ CLASSNUM = {
 }
 
 
-def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=True):
+def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=True, not_transform=False, drop_last=False):
     if name not in DATASETS:
         raise Exception("Unknown dataset name")
     dataset_class = DATASETS[name]
@@ -50,10 +50,12 @@ def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=
         transform = TEST_TRANSFORMS[name]
 
     class_num = CLASSNUM[name]
-
+    if not_transform:
+        # transform = None
+        transform = transforms.Compose([transforms.ToTensor()])
     dataset = dataset_class(root=root, train=train,
                             download=True, transform=transform)
     dataset.class_num = class_num
     dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=shuffle)
+        dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
     return dataloader

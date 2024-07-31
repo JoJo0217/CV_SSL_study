@@ -8,7 +8,7 @@ class Logger:
         self.log_dir = log_dir
         handlers = [logging.StreamHandler(os.sys.stdout)]
         if self.log_dir is not None:
-            os.makedirs(self.log_dir)
+            os.makedirs(self.log_dir, exist_ok=True)
             handlers.append(logging.FileHandler(
                 os.path.join(self.log_dir, 'log.txt')))
             self.writer = SummaryWriter(log_dir=self.log_dir)

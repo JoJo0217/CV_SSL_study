@@ -103,14 +103,14 @@ class ConvMixer(nn.Module):
             *[ConvMixerLayer(kernel_size=7, d_channel=d_channel)
               for _ in range(num_layer)],
             nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Flatten(),  # (batch, d_channel, 1, 1) -> (batch, d_channel)
-
         )
+        self.flat = nn.Flatten(),  # (batch, d_channel, 1, 1) -> (batch, d_channel)
+
         self.out = nn.Linear(d_channel, class_num)
 
     def forward(self, x):
         x = self.bn(self.act(self.input(x)))
         # x shape (batch, d_channel, h/p, w/p)
         x = self.layer(x)
-        x = self.out(x)
+        x = self.out(self.flat(x))
         return x

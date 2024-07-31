@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 from utils.logger import Logger
-from utils.evaluate import eval_model
+from utils.evaluate import eval_model, eval_pretrain_model
 
 AFTER_EPOCH_SCHEDULER = [
     "reduce_on_plateau",
@@ -15,7 +15,7 @@ def train(
         epoch, trainloader, testloader=None,
         device=None, logging_step=None,
         logger=None, scheduler=None, scheduer_type=None,
-        grad_clip=None):
+        grad_clip=None, is_pretrain=False):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model.to(device)
@@ -32,12 +32,17 @@ def train(
 
             optimizer.zero_grad()
 
-            outputs = model(inputs)
+            if is_pretrain is not None:
+                outputs, labels = model(inputs)
+            else:
+                outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
 
             if grad_clip is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+            if is_pretrain == "moco":
+                model.update_key()
 
             optimizer.step()
 
@@ -58,7 +63,11 @@ def train(
                 scheduler.step()
 
         if (testloader is not None):
-            acc = eval_model(model, testloader, device)
+            if is_pretrain is not None:
+                acc = eval_pretrain_model(
+                    model, trainloader, testloader, device, is_pretrain)
+            else:
+                acc = eval_model(model, testloader, device)
             logger.log(global_step, epoch=iter, loss=total_loss,
                        acc=acc, lr=optimizer.param_groups[0]["lr"])
         else:
