@@ -90,8 +90,7 @@ class MoCo(torch.nn.Module):
 
     def update_key(self):
         for param_q, param_k in zip(self.query_encoder.parameters(), self.key_encoder.parameters()):
-            param_k.data.copy_(param_q.data)
-            param_k.requires_grad = False
+            param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)
 
     def save_model(self, output):
         torch.save(self.query_encoder, output)
