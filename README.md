@@ -1,9 +1,9 @@
 AI 학습 repository입니다.
 
-대부분의 모델 논문은 [블로그](https://velog.io/@jojo0217/posts)를 참조하시면 볼 수 있습니다.
+대부분의 모델, 학습 논문은 [블로그](https://velog.io/@jojo0217/posts)를 참조하시면 볼 수 있습니다.
 
 ---
-실행은 run.sh 파일을 가지고 실행하면 됩니다.   
+실행은 pwd를 각 폴더로 이동한 다음 run.sh 파일을 가지고 실행하면 됩니다.   
 파일의 옵션은 main.py에서 읽어보실 수 있습니다.
 ```shell
 ./run.sh

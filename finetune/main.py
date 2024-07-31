@@ -1,12 +1,16 @@
-import argparse
+import sys
+import os
 
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+import argparse
 import torch
 
-from logger import Logger
-from model import load_model
-from dataset import load_data
-from train import train
-from optim import load_optimizer, load_criterion, load_scheduler
+from utils.logger import Logger
+from utils.model import load_model
+from utils.dataset import load_data
+from utils.train import train
+from utils.optim import load_optimizer, load_criterion, load_scheduler
 
 
 def parse_args():

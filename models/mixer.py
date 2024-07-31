@@ -49,13 +49,13 @@ class MLPMixer(nn.Module):
         self.image_size = image_size
         self.patch_size = patch_size
 
-        self.patch_num = (image_size//patch_size)**2
-        self.input = nn.Linear(channel_size*patch_size**2, d_channel)
+        self.patch_num = (image_size // patch_size)**2
+        self.input = nn.Linear(channel_size * patch_size**2, d_channel)
 
         self.layer = nn.Sequential(
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)',
                       p1=patch_size, p2=patch_size),
-            nn.Linear(channel_size*patch_size**2, d_channel),
+            nn.Linear(channel_size * patch_size**2, d_channel),
             *[MixerLayer(d_channel, self.patch_num) for _ in range(num_layer)],
             nn.LayerNorm(d_channel),
         )
@@ -72,7 +72,7 @@ class ConvMixerLayer(nn.Module):
     def __init__(self, kernel_size=3, d_channel=512):
         super().__init__()
         self.depthwise = nn.Conv2d(d_channel, d_channel, kernel_size=kernel_size, padding=(
-            kernel_size//2), groups=d_channel)
+            kernel_size // 2), groups=d_channel)
         self.act = nn.GELU()
         self.norm1 = nn.BatchNorm2d(d_channel)
         self.pointwise = nn.Conv2d(d_channel, d_channel, kernel_size=1)
@@ -81,7 +81,7 @@ class ConvMixerLayer(nn.Module):
 
     def forward(self, x):
         residual = x
-        x = self.norm1(self.act(self.depthwise(x)))+residual
+        x = self.norm1(self.act(self.depthwise(x))) + residual
         # point wise에는 skip connection이 없음
         x = self.norm2(self.act2(self.pointwise(x)))
         return x
@@ -94,7 +94,7 @@ class ConvMixer(nn.Module):
         self.image_size = image_size
         self.patch_size = patch_size
 
-        self.patch_num = (image_size//patch_size)**2
+        self.patch_num = (image_size // patch_size)**2
         self.input = nn.Conv2d(channel_size, d_channel,
                                kernel_size=patch_size, stride=patch_size)
         self.act = nn.GELU()
@@ -104,11 +104,13 @@ class ConvMixer(nn.Module):
               for _ in range(num_layer)],
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),  # (batch, d_channel, 1, 1) -> (batch, d_channel)
-            nn.Linear(d_channel, class_num)
+
         )
+        self.out = nn.Linear(d_channel, class_num)
 
     def forward(self, x):
         x = self.bn(self.act(self.input(x)))
         # x shape (batch, d_channel, h/p, w/p)
         x = self.layer(x)
+        x = self.out(x)
         return x

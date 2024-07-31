@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
-from logger import Logger
-from evaluate import eval_model
+from utils.logger import Logger
+from utils.evaluate import eval_model
 
 AFTER_EPOCH_SCHEDULER = [
     "reduce_on_plateau",

@@ -4,7 +4,7 @@ import argparse
 import torch
 from tqdm import tqdm
 
-from dataset import load_data
+from utils.dataset import load_data
 
 
 def parse_args():
@@ -24,7 +24,7 @@ def eval_model(model, dataloader, device):
             outputs = model(inputs)
         output = torch.argmax(outputs, dim=1)
         acc += torch.sum(output == labels).item()
-    return acc/len(dataloader.dataset)
+    return acc / len(dataloader.dataset)
 
 
 if __name__ == "__main__":

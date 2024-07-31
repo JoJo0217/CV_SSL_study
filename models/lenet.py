@@ -17,5 +17,9 @@ class Lenet5(nn.Sequential):
             nn.Flatten(start_dim=1, end_dim=-1),  # 120,1,1 -> 120
             nn.Linear(120, 84, bias=True),      # 120->84
             nn.Tanh(),
-            nn.Linear(84, class_num, bias=True),       # 84 ->10
         )
+        self.out = nn.Linear(84, class_num, bias=True)  # 84 ->10
+
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)

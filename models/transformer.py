@@ -28,7 +28,7 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, d_model=512, num_head=8):
         super().__init__()
         self.d_model = d_model
-        self.d_k = d_model//num_head
+        self.d_k = d_model // num_head
         self.num_head = num_head
 
         self.Q = nn.Linear(d_model, d_model)
@@ -66,9 +66,9 @@ class EncoderBlock(nn.Module):
         self.norm1 = nn.LayerNorm(d_model)
         self.dropout1 = nn.Dropout(dropout)
         self.FFN = nn.Sequential(
-            nn.Linear(d_model, d_model*4),
+            nn.Linear(d_model, d_model * 4),
             nn.GELU(),
-            nn.Linear(d_model*4, d_model)
+            nn.Linear(d_model * 4, d_model)
         )
         self.norm2 = nn.LayerNorm(d_model)
         self.dropout2 = nn.Dropout(dropout)
@@ -88,7 +88,7 @@ class ViT(nn.Module):
     def __init__(self, class_num=10, d_model=384, num_head=6, img_size=32, patch_size=4, num_block=6):
         super().__init__()
         self.patch_size = patch_size
-        self.num_patch = (img_size//patch_size)**2  # 64개
+        self.num_patch = (img_size // patch_size)**2  # 64개
         self.d_model = d_model
         self.num_head = num_head  # 각 head마다 d_k=d_v=64
 
@@ -99,9 +99,9 @@ class ViT(nn.Module):
         # input shape: (batch, 3, 32, 32)
 
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
-        self.patch_embedding = nn.Linear(3*patch_size**2, d_model)
+        self.patch_embedding = nn.Linear(3 * patch_size**2, d_model)
         self.pos_embedding = nn.Parameter(
-            torch.randn(1, self.num_patch+1, d_model))
+            torch.randn(1, self.num_patch + 1, d_model))
 
         nn.init.xavier_uniform_(self.cls_token)
         nn.init.xavier_uniform_(self.pos_embedding)
@@ -114,7 +114,7 @@ class ViT(nn.Module):
             3, self.patch_size, self.patch_size)
         # (batch, 3, 8, 8, 4, 4) -> (batch, 8, 8, 3, 4, 4) -> (batch, 64, 3*4*4)
         x = x.permute(0, 2, 3, 1, 4, 5).reshape(
-            x.size(0), -1, self.patch_size**2*3)
+            x.size(0), -1, self.patch_size**2 * 3)
         # (batch, 64, 3*4*4) -> (batch, 65, 3*4*4) cls_token 추가
         cls_token = self.cls_token.expand(x.size(0), 1, self.d_model)
         x = torch.cat((cls_token, self.patch_embedding(x)), dim=1)
@@ -146,45 +146,3 @@ class AttentionMixerLayer(nn.Module):
                 self.norm1(x.transpose(1, 2))).transpose(1, 2))
         x = x + self.dropout2(self.channel_attention(self.norm2(x)))
         return x
-
-
-class AttentionMixer(nn.Module):
-    def __init__(self, class_num=10, d_model=384, num_head=8, img_size=32, patch_size=4, num_block=6):
-        super().__init__()
-        self.patch_size = patch_size
-        self.num_patch = (img_size//patch_size)**2  # 64개
-        self.d_model = d_model
-        self.num_head = num_head  # 각 head마다 d_k=d_v=64
-
-        self.layers = nn.ModuleList([AttentionMixerLayer(d_model, self.num_patch, num_head=self.num_head)
-                                     for _ in range(num_block)])
-        self.out = nn.Linear(d_model, class_num)
-
-        # input shape: (batch, 3, 32, 32)
-
-        # self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
-        self.patch_embedding = nn.Linear(3*patch_size**2, d_model)
-        self.pos_embedding = nn.Parameter(
-            torch.randn(1, self.num_patch, d_model))
-
-        # nn.init.xavier_uniform_(self.cls_token)
-        nn.init.xavier_uniform_(self.pos_embedding)
-
-    def forward(self, x):
-        # input shape: (batch, 3, 32, 32)
-        # 이미지를 patch로 나누기
-        # (batch, 3, 32, 32) -> (batch, 3, 8, 8, 4, 4)
-        x = x.unfold(2, self.patch_size, self.patch_size).unfold(
-            3, self.patch_size, self.patch_size)
-        # (batch, 3, 8, 8, 4, 4) -> (batch, 8, 8, 3, 4, 4) -> (batch, 64, 3*4*4)
-        x = x.permute(0, 2, 3, 1, 4, 5).reshape(
-            x.size(0), -1, self.patch_size**2*3)
-        # (batch, 64, 3*4*4)
-        x = self.patch_embedding(x)
-        x = x + self.pos_embedding
-
-        for layer in self.layers:
-            x = layer(x)
-
-        x = torch.mean(x, dim=1)
-        return self.out(x)

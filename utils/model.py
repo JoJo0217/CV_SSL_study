@@ -19,7 +19,6 @@ MODELS = {
     "vit": transformer.ViT,
     "convnext": resnet.ConvNeXt,
     "mlpmixer": mixer.MLPMixer,
-    "attentionmixer": transformer.AttentionMixer,
     "convmixer": mixer.ConvMixer,
 }
 

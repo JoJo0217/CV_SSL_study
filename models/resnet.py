@@ -51,8 +51,12 @@ class Resnet18(nn.Sequential):
             ResBlock(512, 512),
             nn.AvgPool2d(4),                        # 512, 1x1
             nn.Flatten(),
-            nn.Linear(512, class_num),
         )
+        self.out = nn.Linear(512, class_num)
+
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)
 
 
 class ResBottleNeckBlock(nn.Module):
@@ -88,8 +92,8 @@ class ResBottleNeckBlock(nn.Module):
 
     def _identitymap(self, x):
         x = x[:, :, ::self.stride, ::self.stride]
-        dim = self.out_channel//self.in_channel  # in_channel을 out_channel로 만들어야함
-        for _ in range(dim//2):  # 2배 -> 1번 4배 -> 2번
+        dim = self.out_channel // self.in_channel  # in_channel을 out_channel로 만들어야함
+        for _ in range(dim // 2):  # 2배 -> 1번 4배 -> 2번
             x = torch.concat((x, torch.zeros_like(x)), dim=1)
         return x
 
@@ -110,8 +114,12 @@ class ResBottleNecknet18(nn.Sequential):
             ResBottleNeckBlock(2048, 2048),
             nn.AvgPool2d(4),
             nn.Flatten(),
-            nn.Linear(2048, class_num),
         )
+        self.out = nn.Linear(2048, class_num)
+
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)
 
 
 class ResBottleNecknet50(nn.Sequential):
@@ -138,8 +146,12 @@ class ResBottleNecknet50(nn.Sequential):
             ResBottleNeckBlock(2048, 2048),
             nn.AvgPool2d(4),
             nn.Flatten(),
-            nn.Linear(2048, class_num),
         )
+        self.out = nn.Linear(2048, class_num)
+
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)
 
 
 # preactive paper https://arxiv.org/abs/1603.05027 -> option preactive
@@ -189,8 +201,12 @@ class PreActResNet(nn.Sequential):
             nn.ReLU(),
             nn.AvgPool2d(4),
             nn.Flatten(),
-            nn.Linear(512, class_num),
         )
+        self.out = nn.Linear(512, class_num)
+
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)
 
 
 # resnext paperhttps://arxiv.org/pdf/1611.05431
@@ -242,20 +258,25 @@ class ResNext(nn.Sequential):
             ResNextBlock(2048, 1024, 2048),
             nn.AvgPool2d(4),
             nn.Flatten(),
-            nn.Linear(2048, class_num),
         )
+        self.out = nn.Linear(2048, class_num)
 
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)
 
 # convnext paper: https://arxiv.org/pdf/2201.03545
+
+
 class ConvNeXtblock(nn.Module):
     def __init__(self, channel):
         super().__init__()
         self.depth_wise = nn.Conv2d(channel, channel, kernel_size=7,
                                     padding=3, groups=channel)
         self.norm = nn.LayerNorm(channel)
-        self.point_wise1 = nn.Conv2d(channel, channel*4, kernel_size=1)
+        self.point_wise1 = nn.Conv2d(channel, channel * 4, kernel_size=1)
         self.gelu = nn.GELU()
-        self.point_wise2 = nn.Conv2d(channel*4, channel, kernel_size=1)
+        self.point_wise2 = nn.Conv2d(channel * 4, channel, kernel_size=1)
 
         nn.init.zeros_(self.point_wise2.weight)
         if self.point_wise2.bias is not None:
@@ -270,7 +291,7 @@ class ConvNeXtblock(nn.Module):
         x = self.point_wise1(x)
         x = self.gelu(x)
         x = self.point_wise2(x)
-        return x+residual
+        return x + residual
 
 
 class ConvNeXt(nn.Sequential):
@@ -297,5 +318,9 @@ class ConvNeXt(nn.Sequential):
             ConvNeXtblock(768),
             nn.AvgPool2d(2),  # 768x2x2 -> 768x1x1
             nn.Flatten(),
-            nn.Linear(768, class_num),
         )
+        self.out = nn.Linear(768, class_num)
+
+    def forward(self, x):
+        x = super().forward(x)
+        return self.out(x)
