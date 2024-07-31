@@ -126,23 +126,3 @@ class ViT(nn.Module):
 
         x = x[:, 0]
         return self.out(x)
-
-
-# MLP-mixer를 보고 만든 테스트 모델
-class AttentionMixerLayer(nn.Module):
-    def __init__(self, d_model, d_token, num_head=8, dropout=0.1):
-        super().__init__()
-        self.token_attention = MultiHeadAttention(d_token, num_head)
-        self.channel_attention = MultiHeadAttention(d_model, num_head)
-        self.norm1 = nn.LayerNorm(d_token)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-
-    def forward(self, x):
-
-        x = x + \
-            self.dropout1(self.token_attention(
-                self.norm1(x.transpose(1, 2))).transpose(1, 2))
-        x = x + self.dropout2(self.channel_attention(self.norm2(x)))
-        return x
