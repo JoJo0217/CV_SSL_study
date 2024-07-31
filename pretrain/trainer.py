@@ -58,10 +58,16 @@ class MoCo(torch.nn.Module):
     def forward(self, x):
         # X: N, C, H, W
         query = self.augment(x)
-        key = self.augment(x)
         query = self.query_encoder(query)
-        key = self.key_encoder(key)
+        query = nn.functional.normalize(query, dim=1)
+
+        with torch.no_grad():
+            self.update_key()
+            key = self.augment(x)
+            key = self.key_encoder(key)
+            key = nn.functional.normalize(key, dim=1)
         # (N, 128)
+
         l_pos = torch.bmm(query.view(query.size(0), 1, -1),
                           key.view(key.size(0), -1, 1)).squeeze(-1)  # (N,1,128) (N,128,1) -> (N,1,1) -> (N,1)
         # (N,1)
@@ -76,6 +82,7 @@ class MoCo(torch.nn.Module):
         self.dequeue_and_enqueue(key)
         return logits, labels
 
+    @torch.no_grad()
     def dequeue_and_enqueue(self, keys):
         batch_size = keys.size(0)
 
@@ -88,6 +95,7 @@ class MoCo(torch.nn.Module):
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 
+    @torch.no_grad()
     def update_key(self):
         for param_q, param_k in zip(self.query_encoder.parameters(), self.key_encoder.parameters()):
             param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)

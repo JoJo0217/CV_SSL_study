@@ -41,8 +41,6 @@ def train(
 
             if grad_clip is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
-            if is_pretrain == "moco":
-                model.update_key()
 
             optimizer.step()
 
