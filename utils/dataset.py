@@ -50,7 +50,7 @@ def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=
         transform = TEST_TRANSFORMS[name]
 
     class_num = CLASSNUM[name]
-    if not_transform:
+    if not_transform and train:
         # transform = None
         transform = transforms.Compose([transforms.ToTensor()])
     dataset = dataset_class(root=root, train=train,
