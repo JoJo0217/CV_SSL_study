@@ -37,7 +37,7 @@ def eval_pretrain_model(model, trainloader, dataloader, device, pretrain):
     print("make train feature")
     for data in tqdm(trainloader):
         inputs, labels = data[0].to(device), data[1].to(device)
-        outputs = model(inputs)
+        outputs = model.extract_features(inputs)
         train_feature.append(outputs)
         train_labels.append(labels)
 
@@ -48,7 +48,7 @@ def eval_pretrain_model(model, trainloader, dataloader, device, pretrain):
     print("comparing feature")
     for idx, data in tqdm(enumerate(dataloader, start=0)):
         inputs, labels = data[0].to(device), data[1].to(device)
-        outputs = model(inputs)
+        outputs = model.extract_features(inputs)
         # output이 (batch, 128) trainfeature가 (train, 128)이므로 cdist를 사용하여 거리 계산
         dist = torch.cdist(outputs, train_feature)
         knn = torch.topk(dist, k=1, dim=1, largest=False).indices
