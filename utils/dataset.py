@@ -37,7 +37,7 @@ TRAIN_TRANSFORMS = {
     "stl10": transforms.Compose(train_transform),
 }
 
-TEST_TRANSFORMS = {
+BASIC_TRANSFORMS = {
     "cifar10": transforms.Compose(basic_transform),
     "cifar100": transforms.Compose(basic_transform),
     "stl10": transforms.Compose(basic_transform),
@@ -59,18 +59,17 @@ class PretrainSplitter():
         return [q, k]
 
 
-def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=True, not_transform=False, drop_last=False):
+def load_data(name="cifar10", root="./data", train=True, basic_transform=False, batch_size=16, shuffle=True, pretrain=False, drop_last=False):
     if name not in DATASETS:
         raise Exception("Unknown dataset name")
     dataset_class = DATASETS[name]
-    if train is True:
-        transform = TRAIN_TRANSFORMS[name]
+    if basic_transform is True:
+        transform = BASIC_TRANSFORMS[name]
     else:
-        transform = TEST_TRANSFORMS[name]
+        transform = TRAIN_TRANSFORMS[name]
 
     class_num = CLASSNUM[name]
-    if not_transform and train:
-        # transform = None
+    if pretrain:
         transform = PretrainSplitter(pretrain_transform)
     dataset = dataset_class(root=root, train=train,
                             download=True, transform=transform)

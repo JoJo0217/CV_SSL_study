@@ -107,7 +107,7 @@ class ConvMixer(nn.Module):
               for _ in range(num_layer)],
             nn.AdaptiveAvgPool2d((1, 1)),
         )
-        self.flat = nn.Flatten(),  # (batch, d_channel, 1, 1) -> (batch, d_channel)
+        self.flat = nn.Flatten()  # (batch, d_channel, 1, 1) -> (batch, d_channel)
 
         self.out = nn.Linear(d_channel, class_num)
 

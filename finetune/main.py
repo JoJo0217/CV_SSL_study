@@ -54,6 +54,7 @@ def main():
         args.dataset,
         root=args.data_path,
         batch_size=args.batch_size,
+        basic_transform=True,
         train=False
     )
 

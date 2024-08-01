@@ -50,7 +50,7 @@ def main():
         root=args.data_path,
         batch_size=args.batch_size,
         train=True,
-        not_transform=True,
+        basic_transform=True,
         drop_last=True,
     )
     testloader = load_data(
@@ -58,8 +58,17 @@ def main():
         root=args.data_path,
         batch_size=args.batch_size,
         train=False,
-        not_transform=True,
+        basic_transform=True,
         drop_last=True,
+    )
+    pretrainloader = load_data(
+        args.dataset,
+        root=args.data_path,
+        batch_size=args.batch_size,
+        train=True,
+        basic_transform=True,
+        drop_last=True,
+        pretrain=True,
     )
     logger = Logger(args.logdir)
     # write hyper params
@@ -82,7 +91,8 @@ def main():
           scheduler=scheduler,
           scheduer_type=args.scheduler,
           grad_clip=args.grad_clip,
-          is_pretrain=args.pretrain)
+          is_pretrain=args.pretrain,
+          pretrainloader=pretrainloader,)
     print("finish training")
 
     print("saving...")
