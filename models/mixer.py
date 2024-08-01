@@ -117,3 +117,8 @@ class ConvMixer(nn.Module):
         x = self.layer(x)
         x = self.out(self.flat(x))
         return x
+
+    def extract_features(self, x):
+        x = self.bn(self.act(self.input(x)))
+        x = self.layer(x)
+        return x
