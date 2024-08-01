@@ -52,7 +52,6 @@ class MoCo(torch.nn.Module):
         self.register_buffer("queue", torch.randn(dim, queue_size))
         self.queue = nn.functional.normalize(self.queue, dim=0)
 
-        self.queue = torch.randn(dim, queue_size).to(device)
         self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
 
     def forward(self, x):
