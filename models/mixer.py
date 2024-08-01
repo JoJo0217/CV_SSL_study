@@ -67,9 +67,6 @@ class MLPMixer(nn.Module):
         x = self.out(x)
         return x
 
-    def extract_features(self, x):
-        return torch.mean(self.layer(x), dim=1)
-
 
 class ConvMixerLayer(nn.Module):
     def __init__(self, kernel_size=3, d_channel=512):

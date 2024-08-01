@@ -59,9 +59,6 @@ class Resnet18(nn.Module):
         x = self.seq(x)
         return self.out(self.flat(x))
 
-    def extract_features(self, x):
-        return self.flat(self.seq(x))
-
 
 class ResBottleNeckBlock(nn.Module):
     def __init__(self, in_channel, out_channel, is_downsample=False, stride=None):
@@ -126,9 +123,6 @@ class ResBottleNecknet18(nn.Module):
         x = self.seq(x)
         return self.out(self.flat(x))
 
-    def extract_features(self, x):
-        return self.flat(self.seq(x))
-
 
 class ResBottleNecknet50(nn.Module):
     def __init__(self, class_num=10):
@@ -161,9 +155,6 @@ class ResBottleNecknet50(nn.Module):
     def forward(self, x):
         x = self.seq(x)
         return self.out(self.flat(x))
-
-    def extract_features(self, x):
-        return self.flat(self.seq(x))
 
 
 # preactive paper https://arxiv.org/abs/1603.05027 -> option preactive
@@ -221,12 +212,8 @@ class PreActResNet(nn.Module):
         x = self.seq(x)
         return self.out(self.flat(x))
 
-    def extract_features(self, x):
-        return self.flat(self.seq(x))
 
 # resnext paperhttps://arxiv.org/pdf/1611.05431
-
-
 class ResNextBlock(nn.Module):
     def __init__(self, in_channel, inner_channel, out_channel, cardinality=32, is_downsample=False, stride=None):
         super().__init__()
@@ -282,10 +269,6 @@ class ResNext(nn.Module):
     def forward(self, x):
         x = self.seq(x)
         return self.out(self.flat(x))
-
-    def extract_features(self, x):
-        return self.flat(self.seq(x))
-
 
 # convnext paper: https://arxiv.org/pdf/2201.03545
 
@@ -347,6 +330,3 @@ class ConvNeXt(nn.Module):
     def forward(self, x):
         x = self.seq(x)
         return self.out(self.flat(x))
-
-    def extract_features(self, x):
-        return self.flat(self.seq(x))
