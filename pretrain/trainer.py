@@ -24,14 +24,6 @@ class MoCo(torch.nn.Module):
         self.key_encoder = load_model(args.model, class_num=dim)
         self.key_encoder = self.key_encoder.to(device)
 
-        self.augment = transforms.Compose([
-            transforms.RandomResizedCrop(32, antialias=True),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.ColorJitter(
-                brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1)], p=0.8),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        ])
-
         # in the paper moco use encoder with average pool layer as output
         dim_mlp = self.query_encoder.out.weight.shape[1]
 
@@ -54,15 +46,13 @@ class MoCo(torch.nn.Module):
 
         self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
 
-    def forward(self, x):
+    def forward(self, query, key):
         # X: N, C, H, W
-        query = self.augment(x)
         query = self.query_encoder(query)
         query = nn.functional.normalize(query, dim=1)
 
         with torch.no_grad():
             self.update_key()
-            key = self.augment(x)
             key = self.key_encoder(key)
             key = nn.functional.normalize(key, dim=1)
         # (N, 128)
@@ -70,7 +60,7 @@ class MoCo(torch.nn.Module):
         l_pos = torch.bmm(query.view(query.size(0), 1, -1),
                           key.view(key.size(0), -1, 1)).squeeze(-1)  # (N,1,128) (N,128,1) -> (N,1,1) -> (N,1)
         # (N,1)
-        l_neg = torch.mm(query, self.queue)
+        l_neg = torch.mm(query, self.queue.detach())
         # (N,128) (128,queue_size) -> (N,queue_size)
 
         # (N,1)+(N,queue_size) -> (N,queue_size+1)
@@ -88,9 +78,7 @@ class MoCo(torch.nn.Module):
         assert self.queue_size % batch_size == 0
 
         ptr = int(self.queue_ptr)
-        new_queue = self.queue.clone()
-        new_queue[:, ptr:ptr + batch_size] = keys.T
-        self.queue = new_queue
+        self.queue[:, ptr:ptr + batch_size].data = keys.T
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 

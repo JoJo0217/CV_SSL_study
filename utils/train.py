@@ -9,6 +9,10 @@ AFTER_EPOCH_SCHEDULER = [
     "cos_annealing"
 ]
 
+TWO_INPUT_PRETRAIN = [
+    "moco"
+]
+
 
 def train(
         model, criterion, optimizer,
@@ -28,13 +32,15 @@ def train(
         total_loss = 0
 
         for idx, data in tqdm(enumerate(trainloader, start=0)):
-            inputs, labels = data[0].to(device), data[1].to(device)
+            labels = data[1].to(device)
 
             optimizer.zero_grad()
 
-            if is_pretrain is not None:
-                outputs, labels = model(inputs)
+            if is_pretrain in TWO_INPUT_PRETRAIN:
+                inputs = [d.to(device) for d in data[0]]
+                outputs, labels = model(inputs[0], inputs[1])
             else:
+                inputs = data[0].to(device)
                 outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
