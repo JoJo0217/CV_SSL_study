@@ -50,6 +50,7 @@ def main():
         root=args.data_path,
         batch_size=args.batch_size,
         train=True,
+        not_transform=True,
         drop_last=True,
     )
     testloader = load_data(
