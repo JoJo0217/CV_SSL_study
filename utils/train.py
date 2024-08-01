@@ -19,7 +19,7 @@ def train(
         epoch, trainloader, testloader=None,
         device=None, logging_step=None,
         logger=None, scheduler=None, scheduer_type=None,
-        grad_clip=None, is_pretrain=False, pretrainloader=None):
+        grad_clip=None, is_pretrain=None, pretrainloader=None):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model.to(device)
@@ -28,13 +28,13 @@ def train(
 
     global_step = 0
     log_running_loss = 0
+
+    if is_pretrain is not None:
+        test_trainloader = trainloader
+        trainloader = pretrainloader
+
     for iter in range(epoch):
         total_loss = 0
-
-        if is_pretrain != False:
-            test_trainloader = trainloader
-            trainloader = pretrainloader
-
         for idx, data in tqdm(enumerate(trainloader, start=0)):
             labels = data[1].to(device)
 
@@ -71,7 +71,7 @@ def train(
                 scheduler.step()
 
         if (testloader is not None):
-            if is_pretrain != False:
+            if is_pretrain is not None:
                 acc = eval_pretrain_model(
                     model, test_trainloader, testloader, device, is_pretrain)
             else:
