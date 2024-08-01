@@ -3,9 +3,10 @@ from torch import nn
 import torch.nn.functional as F
 
 
-class Lenet5(nn.Sequential):
+class Lenet5(nn.Module):
     def __init__(self, class_num=10):
-        super().__init__(
+        super().__init__()
+        self.seq = nn.Sequential(
             nn.Conv2d(3, 6, 5, bias=True),      # 3,32,32 -> 6,28,28
             nn.Tanh(),
             nn.AvgPool2d(2, 2),                 # 6,28,28 -> 6,14,14
@@ -21,5 +22,8 @@ class Lenet5(nn.Sequential):
         self.out = nn.Linear(84, class_num, bias=True)  # 84 ->10
 
     def forward(self, x):
-        x = super().forward(x)
+        x = self.seq(x)
         return self.out(x)
+
+    def extract_features(self, x):
+        return self.seq(x)

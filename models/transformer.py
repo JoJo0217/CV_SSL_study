@@ -107,6 +107,10 @@ class ViT(nn.Module):
         nn.init.xavier_uniform_(self.pos_embedding)
 
     def forward(self, x):
+        x = self.extract_features(x)
+        return self.out(x)
+
+    def extract_features(self, x):
         # input shape: (batch, 3, 32, 32)
         # 이미지를 patch로 나누기
         # (batch, 3, 32, 32) -> (batch, 3, 8, 8, 4, 4)
@@ -125,4 +129,4 @@ class ViT(nn.Module):
             x = layer(x)
 
         x = x[:, 0]
-        return self.out(x)
+        return x

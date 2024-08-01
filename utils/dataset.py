@@ -2,13 +2,6 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-
-DATASETS = {
-    "cifar10": torchvision.datasets.CIFAR10,
-    "cifar100": torchvision.datasets.CIFAR100,
-    "stl10": torchvision.datasets.STL10,
-}
-
 train_transform = [
     transforms.RandomResizedCrop((32, 32)),
     transforms.RandomHorizontalFlip(),
@@ -21,6 +14,22 @@ basic_transform = [
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ]
+
+pretrain_transform = [
+    transforms.RandomResizedCrop(32, antialias=True),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomApply([transforms.ColorJitter(
+        brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1)], p=0.8),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+]
+
+DATASETS = {
+    "cifar10": torchvision.datasets.CIFAR10,
+    "cifar100": torchvision.datasets.CIFAR100,
+    "stl10": torchvision.datasets.STL10,
+}
+
 
 TRAIN_TRANSFORMS = {
     "cifar10": transforms.Compose(train_transform),
@@ -40,6 +49,16 @@ CLASSNUM = {
 }
 
 
+class PretrainSplitter():
+    def __init__(self, transform):
+        self.augment = transforms.Compose(transform)
+
+    def __call__(self, x):
+        q = self.augment(x)
+        k = self.augment(x)
+        return [q, k]
+
+
 def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=True, not_transform=False, drop_last=False):
     if name not in DATASETS:
         raise Exception("Unknown dataset name")
@@ -52,7 +71,7 @@ def load_data(name="cifar10", root="./data", train=True, batch_size=16, shuffle=
     class_num = CLASSNUM[name]
     if not_transform and train:
         # transform = None
-        transform = transforms.Compose([transforms.ToTensor()])
+        transform = PretrainSplitter(pretrain_transform)
     dataset = dataset_class(root=root, train=train,
                             download=True, transform=transform)
     dataset.class_num = class_num
