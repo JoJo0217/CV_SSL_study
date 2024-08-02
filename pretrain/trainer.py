@@ -60,7 +60,7 @@ class MoCo(torch.nn.Module):
         l_pos = torch.bmm(query.view(query.size(0), 1, -1),
                           key.view(key.size(0), -1, 1)).squeeze(-1)  # (N,1,128) (N,128,1) -> (N,1,1) -> (N,1)
         # (N,1)
-        l_neg = torch.mm(query, self.queue.detach())
+        l_neg = torch.mm(query, self.queue.clone().detach())
         # (N,128) (128,queue_size) -> (N,queue_size)
 
         # (N,1)+(N,queue_size) -> (N,queue_size+1)
@@ -78,7 +78,8 @@ class MoCo(torch.nn.Module):
         assert self.queue_size % batch_size == 0
 
         ptr = int(self.queue_ptr)
-        self.queue[:, ptr:ptr + batch_size].data = keys.T
+        # self.queue[:, ptr:ptr + batch_size].data = keys.T  <- error 복사가 이루어지지 않음
+        self.queue[:, ptr:ptr + batch_size] = keys.T
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 
