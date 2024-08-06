@@ -9,10 +9,6 @@ AFTER_EPOCH_SCHEDULER = [
     "cos_annealing"
 ]
 
-TWO_INPUT_PRETRAIN = [
-    "moco"
-]
-
 
 def train(
         model, criterion, optimizer,
@@ -40,7 +36,7 @@ def train(
 
             optimizer.zero_grad()
 
-            if is_pretrain in TWO_INPUT_PRETRAIN:
+            if is_pretrain is not None:
                 inputs = [d.to(device) for d in data[0]]
                 outputs, labels = model(inputs[0], inputs[1])
             else:

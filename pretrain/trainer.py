@@ -12,7 +12,7 @@ from utils.optim import load_optimizer, load_criterion, load_scheduler
 from utils.dataset import load_data
 
 
-class MoCo(torch.nn.Module):
+class MoCo(nn.Module):
     def __init__(self, device, args, dim=128, queue_size=65536, m=0.999, tau=0.07):
         super().__init__()
         self.dim = dim
@@ -92,7 +92,39 @@ class MoCo(torch.nn.Module):
         torch.save(self.query_encoder, output)
 
 
+class RotNet(nn.Module):
+    def __init__(self, device, args):
+        super().__init__()
+        self.encoder = load_model(args.model, class_num=4)
+        self.encoder = self.encoder.to(device)
+
+        dim_mlp = self.encoder.out.weight.shape[1]
+        self.encoder.out = nn.Sequential(
+            nn.Linear(dim_mlp, dim_mlp),
+            nn.ReLU(),
+            nn.Linear(dim_mlp, 4),
+        )
+
+    def forward(self, x, _):
+        # (batch, 3, 32, 32)
+        with torch.no_grad():
+            label = torch.zeros(x.size(0) * 4, dtype=torch.long)
+            for i in range(4):
+                label[x.size(0) * i:x.size(0) * (i + 1)] = i
+
+            label = torch.tensor(label).to(x.device)
+            arr = []
+            for i in range(4):
+                arr.append(torch.rot90(x, k=i, dims=(2, 3)))
+            arr = torch.concat(arr, dim=0)
+        # (batch*4, 3, 32, 32)
+        output = self.encoder(arr)
+        # (batch*4, 4)
+        return output, label
+
+
 TRAINERS = {
+    "rotnet": RotNet,
     "moco": MoCo,
 }
 

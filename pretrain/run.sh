@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
-    --pretrain moco \
+    --pretrain rotnet \
     --model resnet18 \
     --dataset cifar10 \
     --optimizer adamw \
@@ -7,7 +7,7 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --weight_decay 0.0001 \
     --scheduler cos_annealing \
     --T_max 200 \
-    --batch_size 256 \
+    --batch_size 64 \
     --logging_step 1 \
     --epoch 200 \
-    --logdir ./log_moco_resnet18_0.01/ \
+    --logdir ./log_rotnet_resnet18_0.01/ \
