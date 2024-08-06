@@ -31,6 +31,7 @@ def train(
 
     for iter in range(epoch):
         total_loss = 0
+        model.train()
         for idx, data in tqdm(enumerate(trainloader, start=0)):
             labels = data[1].to(device)
 
@@ -67,6 +68,7 @@ def train(
                 scheduler.step()
 
         if (testloader is not None):
+            model.eval()
             if is_pretrain is not None:
                 acc = eval_pretrain_model(
                     model, test_trainloader, testloader, device, is_pretrain)
