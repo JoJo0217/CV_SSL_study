@@ -8,8 +8,6 @@ from torch import nn
 from tqdm import tqdm
 import torchvision.transforms as transforms
 from utils.model import load_model
-from utils.optim import load_optimizer, load_criterion, load_scheduler
-from utils.dataset import load_data
 
 
 class MoCo(nn.Module):
