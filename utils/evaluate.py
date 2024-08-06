@@ -31,7 +31,7 @@ def eval_model(model, dataloader, device):
 def eval_pretrain_model(model, trainloader, dataloader, device, pretrain):
     acc = 0
     if pretrain == "moco":
-        model = model.query_encoder
+        model = model.encoder
     train_feature = []
     train_labels = []
     print("make train feature")

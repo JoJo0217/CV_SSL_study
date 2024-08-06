@@ -19,25 +19,25 @@ class MoCo(nn.Module):
         self.m = m
         self.tau = tau
         self.queue_size = queue_size
-        self.query_encoder = load_model(args.model, class_num=dim)
-        self.query_encoder = self.query_encoder.to(device)
+        self.encoder = load_model(args.model, class_num=dim)
+        self.encoder = self.encoder.to(device)
         self.key_encoder = load_model(args.model, class_num=dim)
         self.key_encoder = self.key_encoder.to(device)
 
         # in the paper moco use encoder with average pool layer as output
-        dim_mlp = self.query_encoder.out.weight.shape[1]
+        dim_mlp = self.encoder.out.weight.shape[1]
 
         self.key_encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
             nn.Linear(dim_mlp, dim),
         )
-        self.query_encoder.out = nn.Sequential(
+        self.encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
             nn.Linear(dim_mlp, dim),
         )
-        for param_q, param_k in zip(self.query_encoder.parameters(), self.key_encoder.parameters()):
+        for param_q, param_k in zip(self.encoder.parameters(), self.key_encoder.parameters()):
             param_k.data.copy_(param_q.data)
             param_k.requires_grad = False
 
@@ -48,7 +48,7 @@ class MoCo(nn.Module):
 
     def forward(self, query, key):
         # X: N, C, H, W
-        query = self.query_encoder(query)
+        query = self.encoder(query)
         query = nn.functional.normalize(query, dim=1)
 
         with torch.no_grad():
@@ -85,11 +85,11 @@ class MoCo(nn.Module):
 
     @torch.no_grad()
     def update_key(self):
-        for param_q, param_k in zip(self.query_encoder.parameters(), self.key_encoder.parameters()):
+        for param_q, param_k in zip(self.encoder.parameters(), self.key_encoder.parameters()):
             param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)
 
     def save_model(self, output):
-        torch.save(self.query_encoder, output)
+        torch.save(self.encoder, output)
 
 
 class RotNet(nn.Module):
@@ -112,7 +112,7 @@ class RotNet(nn.Module):
             for i in range(4):
                 label[x.size(0) * i:x.size(0) * (i + 1)] = i
 
-            label = torch.tensor(label).to(x.device)
+            label = label.to(x.device)
             arr = []
             for i in range(4):
                 arr.append(torch.rot90(x, k=i, dims=(2, 3)))
