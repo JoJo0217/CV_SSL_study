@@ -9,6 +9,7 @@
 ./run.sh
 ```
 
+## 모델들 
 models 폴더에 각종 모델들이 정리되어 있습니다.   
 model.py 파일에 모델을 불러오기 위한 이름이 정의되어 있습니다.
 - lenet5
@@ -30,6 +31,11 @@ fine-tune은 finetune 폴더에 구현이 되어있고
 pretrain은 pretrain 폴더에 구현이 되어있습니다.
 
 실행방법은 둘다 동일하게 ./run.sh입니다.
+
+pretrain 구현 목록입니다.
+- moco
+- rotnet
+- simclr
 
 ---
 모델을 테스트하기 위해서는 evaluate.py 코드를 활용할 수 있습니다.

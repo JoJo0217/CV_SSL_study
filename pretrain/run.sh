@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
-    --pretrain rotnet \
+    --pretrain simclr \
     --model resnet18 \
     --dataset cifar10 \
     --optimizer adamw \
@@ -10,4 +10,4 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --batch_size 64 \
     --logging_step 1 \
     --epoch 200 \
-    --logdir ./log_rotnet_resnet18_0.01/ \
+    --logdir ./log_simclr_resnet18_0.01/ \

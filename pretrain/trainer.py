@@ -123,9 +123,55 @@ class RotNet(nn.Module):
         return output, label
 
 
+class Simclr(nn.Module):
+    def __init__(self, device, args):
+        super().__init__()
+        self.encoder = load_model(args.model, class_num=128)
+        self.encoder = self.encoder.to(device)
+        self.key_encoder = load_model(args.model, class_num=128)
+        self.key_encoder = self.key_encoder.to(device)
+
+        dim_mlp = self.encoder.out.weight.shape[1]
+        self.encoder.out = nn.Sequential(
+            nn.Linear(dim_mlp, dim_mlp),
+            nn.ReLU(),
+            nn.Linear(dim_mlp, 128),
+        )
+        self.key_encoder.out = nn.Sequential(
+            nn.Linear(dim_mlp, dim_mlp),
+            nn.ReLU(),
+            nn.Linear(dim_mlp, 128),
+        )
+
+    def forward(self, query, key):
+        # query, key -> (batch, 3, 32, 32)
+        query = self.encoder(query)
+        query = nn.functional.normalize(query, dim=1)
+
+        with torch.no_grad():
+            key = self.key_encoder(key)
+            key = nn.functional.normalize(key, dim=1)
+
+        # (2*batch, 128) query-key 쌍 생성
+        logit = torch.cat([query, key], dim=0)
+        # (2*batch,2*batch)
+        logit = torch.mm(logit, logit.T)
+        for i in range(query.size(0) * 2):
+            logit[i, i] = -1e9
+        # 자기꺼는 제외
+
+        label = torch.arange(2 * query.size(0)).to(query.device)
+        for i in range(query.size(0)):
+            label[i + query.size(0)] = i
+            label[i] = i + query.size(0)
+        # (2*batch, batch)가 나옴
+        return logit, label
+
+
 TRAINERS = {
     "rotnet": RotNet,
     "moco": MoCo,
+    "simclr": Simclr,
 }
 
 
