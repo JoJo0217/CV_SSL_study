@@ -124,8 +124,9 @@ class RotNet(nn.Module):
 
 
 class Simclr(nn.Module):
-    def __init__(self, device, args):
+    def __init__(self, device, args, dim=128, tau=0.07):
         super().__init__()
+        self.tau = tau
         self.encoder = load_model(args.model, class_num=128)
         self.encoder = self.encoder.to(device)
         self.key_encoder = load_model(args.model, class_num=128)
@@ -135,12 +136,12 @@ class Simclr(nn.Module):
         self.encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
-            nn.Linear(dim_mlp, 128),
+            nn.Linear(dim_mlp, dim),
         )
         self.key_encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
-            nn.Linear(dim_mlp, 128),
+            nn.Linear(dim_mlp, dim),
         )
 
     def forward(self, query, key):
@@ -155,7 +156,7 @@ class Simclr(nn.Module):
         # (2*batch, 128) query-key 쌍 생성
         logit = torch.cat([query, key], dim=0)
         # (2*batch,2*batch)
-        logit = torch.mm(logit, logit.T)
+        logit = torch.mm(logit, logit.T) / self.tau
         for i in range(query.size(0) * 2):
             logit[i, i] = -1e9
         # 자기꺼는 제외
