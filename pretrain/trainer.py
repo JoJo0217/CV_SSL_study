@@ -120,6 +120,9 @@ class RotNet(nn.Module):
         # (batch*4, 4)
         return output, label
 
+    def save_model(self, output):
+        torch.save(self.encoder, output)
+
 
 class Simclr(nn.Module):
     def __init__(self, device, args, dim=128, tau=0.07):
@@ -157,6 +160,9 @@ class Simclr(nn.Module):
             label[i] = i + query.size(0)
         # (2*batch, batch)가 나옴
         return logit, label
+
+    def save_model(self, output):
+        torch.save(self.encoder, output)
 
 
 TRAINERS = {
