@@ -54,7 +54,7 @@ def train(
             log_running_loss += loss.item()
             total_loss += loss.item()
 
-            if logging_step is not None and (global_step % logging_step) == 0:
+            if logging_step is not None and global_step != 0 and (global_step % logging_step) == 0:
                 logger.log(global_step, loss=log_running_loss /
                            logging_step, lr=optimizer.param_groups[0]["lr"])
                 log_running_loss = 0
@@ -71,7 +71,7 @@ def train(
             model.eval()
             if is_pretrain is not None:
                 acc = eval_pretrain_model(
-                    model, test_trainloader, testloader, device, is_pretrain)
+                    model, test_trainloader, testloader, device)
             else:
                 acc = eval_model(model, testloader, device)
             logger.log(global_step, epoch=iter, loss=total_loss,

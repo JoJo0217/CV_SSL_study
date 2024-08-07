@@ -38,7 +38,8 @@ pretrain 구현 목록입니다.
 - simclr
 
 ---
-모델을 테스트하기 위해서는 evaluate.py 코드를 활용할 수 있습니다.
+학습한 모델을 테스트하기 위해서는 evaluate.py 코드를 활용할 수 있습니다.
 ```shell
-python3 evaluate.py [경로] --option
+python3 evaluate.py --model [경로] --option
 ```
+만약 pretrain으로 학습하였을 경우 --pretrain을 추가하시면 됩니다.

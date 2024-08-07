@@ -1,13 +1,13 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --pretrain rotnet \
-    --model convmixer \
+    --model resnet18 \
     --dataset cifar10 \
     --optimizer adamw \
     --lr 0.003 \
     --weight_decay 0.0001 \
     --scheduler cos_annealing \
     --T_max 200 \
-    --batch_size 32 \
+    --batch_size 64 \
     --logging_step 1 \
     --epoch 200 \
-    --logdir ./log_rotnet_convmixer_0.01/ \
+    --logdir ./log_rotnet_resnet18_0.01/ \

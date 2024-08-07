@@ -1,5 +1,9 @@
 import sys
+import os
 import argparse
+
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
 
 import torch
 from tqdm import tqdm
@@ -9,6 +13,8 @@ from utils.dataset import load_data
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--pretrain", action="store_true")
+    parser.add_argument("--model", type=str, default="./model.pth")
     parser.add_argument("--dataset", type=str, default="cifar10")
     parser.add_argument("--data_path", type=str, default="./data")
     parser.add_argument("--batch_size", type=int, default=32)
@@ -28,9 +34,10 @@ def eval_model(model, dataloader, device):
 
 
 @torch.no_grad()
-def eval_pretrain_model(model, trainloader, dataloader, device, pretrain):
+def eval_pretrain_model(model, trainloader, dataloader, device, in_train=True):
     acc = 0
-    model = model.encoder
+    if in_train is True:
+        model = model.encoder
     train_feature = []
     train_labels = []
     print("make train feature")
@@ -58,18 +65,21 @@ def eval_pretrain_model(model, trainloader, dataloader, device, pretrain):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("사용법: python3 evaluate.py [경로]")
-        sys.exit(1)
-    path = sys.argv[1]
 
     args = parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    testloader = load_data(name=args.dataset, root=args.data_path,
-                           train=False, batch_size=args.batch_size)
-
-    model_loaded = torch.load(path)  # model 불러오기
+    model_loaded = torch.load(args.model)  # model 불러오기
     model_loaded.to(device)
+    if args.pretrain is False:
 
-    print("acc: ", eval_model(model_loaded, testloader, device))
+        testloader = load_data(name=args.dataset, root=args.data_path,
+                               train=False, batch_size=args.batch_size)
+        print("acc: ", eval_model(model_loaded, testloader, device))
+    else:
+        trainloader = load_data(name=args.dataset, root=args.data_path,
+                                train=True, basic_transform=True, drop_last=True, batch_size=args.batch_size)
+        testloader = load_data(name=args.dataset, root=args.data_path,
+                               train=False, basic_transform=True, drop_last=True, batch_size=args.batch_size)
+        print("acc: ", eval_pretrain_model(model_loaded,
+              trainloader, testloader, device, in_train=False))
