@@ -34,7 +34,7 @@ class MultiHeadAttention(nn.Module):
         self.Q = nn.Linear(d_model, d_model)
         self.K = nn.Linear(d_model, d_model)
         self.V = nn.Linear(d_model, d_model)
-        self.ScaledDotProductAttention = ScaledDotProductAttention()
+        self.scaled_dot_product_attention = ScaledDotProductAttention()
         self.out = nn.Linear(d_model, d_model)
 
         nn.init.zeros_(self.out.weight)
@@ -52,7 +52,7 @@ class MultiHeadAttention(nn.Module):
         K = K.view(K.size(0), K.size(1), -1, self.d_k).transpose(1, 2)
         V = V.view(V.size(0), V.size(1), -1, self.d_k).transpose(1, 2)
         # Q, K, V shape: (batch, num_head, seq_len, d_model//num_head)
-        output = self.ScaledDotProductAttention(Q, K, V)
+        output = self.scaled_dot_product_attention(Q, K, V)
         # output shape: (batch, num_head, seq_len, d_model//num_head)
         output = output.transpose(1, 2).reshape(x.size(0), -1, self.d_model)
         output = self.out(output)
@@ -78,8 +78,8 @@ class EncoderBlock(nn.Module):
             nn.init.zeros_(self.FFN[-1].bias)
 
     def forward(self, x):
-        x = x + self.dropout1(self.norm1(self.attention(x)))
-        x = x + self.dropout2(self.norm2(self.FFN(x)))
+        x = x + self.dropout1(self.attention(self.norm1(x)))
+        x = x + self.dropout2(self.FFN(self.norm2(x)))
         return x
 
 
@@ -98,13 +98,11 @@ class ViT(nn.Module):
 
         # input shape: (batch, 3, 32, 32)
 
-        self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
-        self.patch_embedding = nn.Linear(3 * patch_size**2, d_model)
+        self.cls_token = nn.Parameter(torch.randn(1, 1, d_model).mul_(0.02))
+        self.patch_embedding = nn.Conv2d(3, d_model, kernel_size=patch_size, stride=patch_size)
+        # self.patch_embedding = nn.Linear(3 * patch_size**2, d_model)
         self.pos_embedding = nn.Parameter(
-            torch.randn(1, self.num_patch + 1, d_model))
-
-        nn.init.xavier_uniform_(self.cls_token)
-        nn.init.xavier_uniform_(self.pos_embedding)
+            torch.randn(1, self.num_patch + 1, d_model).mul_(0.02))
 
     def forward(self, x):
         x = self.extract_features(x)
@@ -113,15 +111,13 @@ class ViT(nn.Module):
     def extract_features(self, x):
         # input shape: (batch, 3, 32, 32)
         # 이미지를 patch로 나누기
-        # (batch, 3, 32, 32) -> (batch, 3, 8, 8, 4, 4)
-        x = x.unfold(2, self.patch_size, self.patch_size).unfold(
-            3, self.patch_size, self.patch_size)
-        # (batch, 3, 8, 8, 4, 4) -> (batch, 8, 8, 3, 4, 4) -> (batch, 64, 3*4*4)
-        x = x.permute(0, 2, 3, 1, 4, 5).reshape(
-            x.size(0), -1, self.patch_size**2 * 3)
-        # (batch, 64, 3*4*4) -> (batch, 65, 3*4*4) cls_token 추가
+        # (batch, 3, 32, 32)->(batch, d_model, 8, 8)
+        x = self.patch_embedding(x)
+        x = x.permute(0, 2, 3, 1).reshape(x.size(0), -1, self.d_model)
+
+        # (batch, 64, d_model)
         cls_token = self.cls_token.expand(x.size(0), 1, self.d_model)
-        x = torch.cat((cls_token, self.patch_embedding(x)), dim=1)
+        x = torch.cat((cls_token, x), dim=1)
         x = x + self.pos_embedding
         # (batch, 65, 384)
 

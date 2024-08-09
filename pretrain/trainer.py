@@ -150,14 +150,12 @@ class Simclr(nn.Module):
         logit = torch.cat([query, key], dim=0)
         # (2*batch,2*batch)
         logit = torch.mm(logit, logit.T) / self.tau
-        for i in range(query.size(0) * 2):
-            logit[i, i] = -1e9
+        logit = logit.fill_diagonal_(-1e9)
         # 자기꺼는 제외
 
-        label = torch.arange(2 * query.size(0)).to(query.device)
-        for i in range(query.size(0)):
-            label[i + query.size(0)] = i
-            label[i] = i + query.size(0)
+        label = torch.cat([torch.arange(query.size(0), 2 * query.size(0)),
+                          torch.arange(0, query.size(0))], dim=0)
+        label = label.to(query.device)
         # (2*batch, batch)가 나옴
         return logit, label
 
