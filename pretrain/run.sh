@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
-    --pretrain moco \
+    --pretrain simsiam \
     --model convnext \
     --dataset cifar10 \
     --optimizer adamw \
@@ -10,4 +10,4 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --batch_size 128 \
     --logging_step 1 \
     --epoch 1 \
-    --logdir ./log_moco_convnext_0.01/ \
+    --logdir ./log_simsiam_convnext_0.01/ \

@@ -62,6 +62,7 @@ def eval_pretrain_model(model, trainloader, dataloader, device, in_train=True):
     return acc / len(dataloader.dataset)
 
 
+# framework 안쓰고 모델을 바로 평가할 때 사용
 @torch.no_grad()
 def evaluate_model(model, dataloader, device):
     acc = 0

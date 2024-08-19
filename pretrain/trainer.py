@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 from tqdm import tqdm
 import torchvision.transforms as transforms
 from utils.model import load_model
@@ -21,21 +22,15 @@ class MoCo(Framework):
 
         model = load_model(args.model, class_num=dim)
         super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
-        self.key_encoder = copy.deepcopy(self.encoder)
 
         dim_mlp = self.encoder.out.weight.shape[1]
-        self.key_encoder.out = nn.Sequential(
-            nn.Linear(dim_mlp, dim_mlp),
-            nn.ReLU(),
-            nn.Linear(dim_mlp, dim),
-        )
         self.encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
             nn.Linear(dim_mlp, dim),
         )
         self.encoder = self.encoder.to(device)
-        self.key_encoder = self.key_encoder.to(device)
+        self.key_encoder = copy.deepcopy(self.encoder).to(device)
         for param_q, param_k in zip(self.encoder.parameters(), self.key_encoder.parameters()):
             param_k.data.copy_(param_q.data)
             param_k.requires_grad = False
@@ -101,7 +96,8 @@ class RotNet(Framework):
         )
         self.encoder = self.encoder.to(device)
 
-    def forward(self, x, _):
+    def forward(self, batch):
+        x = batch[0][0].to(self.device)
         # (batch, 3, 32, 32)
         with torch.no_grad():
             label = torch.zeros(x.size(0) * 4, dtype=torch.long)
@@ -122,7 +118,7 @@ class RotNet(Framework):
 
 class Simclr(Framework):
     def __init__(self, device, args, dim=128, tau=0.07):
-        model = load_model(args.model, class_num=128)
+        model = load_model(args.model, class_num=dim)
         super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
         self.tau = tau
 
@@ -134,7 +130,8 @@ class Simclr(Framework):
         )
         self.encoder = self.encoder.to(device)
 
-    def forward(self, query, key):
+    def forward(self, batch):
+        query, key = batch[0][0].to(self.device), batch[0][1].to(self.device)
         # query, key -> (batch, 3, 32, 32)
         query = self.encoder(query)
         query = nn.functional.normalize(query, dim=1)
@@ -156,14 +153,112 @@ class Simclr(Framework):
         loss = self.criterion(logit, label)
         return loss
 
-    def save_model(self, output):
-        torch.save(self.encoder, output)
+
+class BYOL(Framework):
+    def __init__(self, device, args, dim=128, m=0.996):
+        self.m = m
+        model = load_model(args.model, class_num=dim)
+        super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
+
+        dim_mlp = self.encoder.out.weight.shape[1]
+        hidden_dim = 2048
+        self.encoder.out = nn.Sequential(
+            nn.Linear(dim_mlp, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+        )
+        self.predictor = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 4),
+            nn.BatchNorm1d(hidden_dim // 4),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 4, hidden_dim),
+        )
+        self.encoder = self.encoder.to(device)
+        self.target_encoder = copy.deepcopy(self.encoder).to(device)
+        self.predictor = self.predictor.to(device)
+
+        for param_q, param_k in zip(self.encoder.parameters(), self.target_encoder.parameters()):
+            param_k.data.copy_(param_q.data)
+            param_k.requires_grad = False
+
+    def forward(self, batch):
+        x1, x2 = batch[0][0].to(self.device), batch[0][1].to(self.device)
+        # (batch, 3, 32, 32)
+        self.update_key_()
+
+        z0 = self.encoder(x1)
+        z1 = self.target_encoder(x2)
+        p0 = self.predictor(z0)
+        p1 = self.predictor(z1)
+
+        loss = self.loss_(p0, z1.detach()) + self.loss_(p1, z0.detach())
+        return loss.mean()
+
+    def loss_(self, x1, x2):
+        x1 = F.normalize(x1, dim=-1, p=2)
+        x2 = F.normalize(x2, dim=-1, p=2)
+        return 2 - 2 * (x1 * x2).sum(dim=-1)
+
+    def update_key_(self):
+        for param_q, param_k in zip(self.encoder.parameters(), self.target_encoder.parameters()):
+            param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)
+
+
+class SimSiam(Framework):
+    def __init__(self, device, args, dim=128):
+        model = load_model(args.model, class_num=dim)
+        super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
+        dim_mlp = self.encoder.out.weight.shape[1]
+        hidden_dim = 2048
+        self.encoder.out = nn.Sequential(
+            nn.Linear(dim_mlp, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+        )
+        self.predictor = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 4),
+            nn.BatchNorm1d(hidden_dim // 4),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 4, hidden_dim),
+        )
+        self.encoder = self.encoder.to(device)
+        self.predictor = self.predictor.to(device)
+
+    def forward(self, batch):
+        x1, x2 = batch[0][0].to(self.device), batch[0][1].to(self.device)
+        # (batch, 3, 32, 32)
+        z0 = self.encoder(x1)
+        z1 = self.encoder(x2)
+        p0 = self.predictor(z0)
+        p1 = self.predictor(z1)
+
+        loss = (self.loss_(p0, z1.detach()) / 2) + (self.loss_(p1, z0.detach()) / 2)
+        return loss.mean()
+
+    def loss_(self, x1, x2):
+        x1 = F.normalize(x1, dim=-1, p=2)
+        x2 = F.normalize(x2, dim=-1, p=2)
+        return -(x1 * x2).sum(dim=-1)
 
 
 TRAINERS = {
     "rotnet": RotNet,
     "moco": MoCo,
     "simclr": Simclr,
+    "byol": BYOL,
+    "simsiam": SimSiam,
 }
 
 
