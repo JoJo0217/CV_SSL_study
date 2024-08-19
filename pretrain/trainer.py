@@ -192,12 +192,13 @@ class BYOL(Framework):
         # (batch, 3, 32, 32)
         self.update_key_()
 
-        z0 = self.encoder(x1)
-        z1 = self.target_encoder(x2)
-        p0 = self.predictor(z0)
-        p1 = self.predictor(z1)
+        p1 = self.predictor(self.encoder(x1))
+        z2 = self.target_encoder(x2)
 
-        loss = self.loss_(p0, z1.detach()) + self.loss_(p1, z0.detach())
+        p2 = self.predictor(self.encoder(x2))
+        z1 = self.target_encoder(x1)
+
+        loss = self.loss_(p1, z2.detach()) + self.loss_(p2, z1.detach())
         return loss.mean()
 
     def loss_(self, x1, x2):
@@ -239,12 +240,12 @@ class SimSiam(Framework):
     def forward(self, batch):
         x1, x2 = batch[0][0].to(self.device), batch[0][1].to(self.device)
         # (batch, 3, 32, 32)
-        z0 = self.encoder(x1)
-        z1 = self.encoder(x2)
-        p0 = self.predictor(z0)
+        z1 = self.encoder(x1)
+        z2 = self.encoder(x2)
         p1 = self.predictor(z1)
+        p2 = self.predictor(z2)
 
-        loss = (self.loss_(p0, z1.detach()) / 2) + (self.loss_(p1, z0.detach()) / 2)
+        loss = (self.loss_(p1, z2.detach()) / 2) + (self.loss_(p2, z1.detach()) / 2)
         return loss.mean()
 
     def loss_(self, x1, x2):
