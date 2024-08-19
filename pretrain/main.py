@@ -86,6 +86,7 @@ def main():
           args.epoch,
           trainloader,
           testloader,
+          device=device,
           logging_step=args.logging_step,
           logger=logger,
           scheduler=scheduler,
@@ -96,7 +97,7 @@ def main():
     print("finish training")
 
     print("saving...")
-    model.save_model(args.output)
+    model.save(args.output)
     print("save success")
     return None
 

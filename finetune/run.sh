@@ -8,5 +8,5 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --T_max 300 \
     --batch_size 128 \
     --logging_step 10 \
-    --epoch 300 \
+    --epoch 1 \
     --logdir ./log_convmixer_0.001/ \

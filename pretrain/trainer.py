@@ -1,5 +1,6 @@
 import sys
 import os
+import copy
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
@@ -8,23 +9,21 @@ from torch import nn
 from tqdm import tqdm
 import torchvision.transforms as transforms
 from utils.model import load_model
+from utils.train import Framework
 
 
-class MoCo(nn.Module):
+class MoCo(Framework):
     def __init__(self, device, args, dim=128, queue_size=65536, m=0.999, tau=0.07):
-        super().__init__()
         self.dim = dim
         self.m = m
         self.tau = tau
         self.queue_size = queue_size
-        self.encoder = load_model(args.model, class_num=dim)
-        self.encoder = self.encoder.to(device)
-        self.key_encoder = load_model(args.model, class_num=dim)
-        self.key_encoder = self.key_encoder.to(device)
 
-        # in the paper moco use encoder with average pool layer as output
+        model = load_model(args.model, class_num=dim)
+        super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
+        self.key_encoder = copy.deepcopy(self.encoder)
+
         dim_mlp = self.encoder.out.weight.shape[1]
-
         self.key_encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
@@ -35,22 +34,24 @@ class MoCo(nn.Module):
             nn.ReLU(),
             nn.Linear(dim_mlp, dim),
         )
+        self.encoder = self.encoder.to(device)
+        self.key_encoder = self.key_encoder.to(device)
         for param_q, param_k in zip(self.encoder.parameters(), self.key_encoder.parameters()):
             param_k.data.copy_(param_q.data)
             param_k.requires_grad = False
 
-        self.register_buffer("queue", torch.randn(dim, queue_size))
+        self.queue = torch.randn(dim, queue_size, requires_grad=False).to(device)
         self.queue = nn.functional.normalize(self.queue, dim=0)
+        self.queue_ptr = torch.zeros(1, dtype=torch.long, requires_grad=False).to(device)
 
-        self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
-
-    def forward(self, query, key):
+    def forward(self, batch):
+        query, key = batch[0][0].to(self.device), batch[0][1].to(self.device)
         # X: N, C, H, W
         query = self.encoder(query)
         query = nn.functional.normalize(query, dim=1)
 
         with torch.no_grad():
-            self.update_key()
+            self.update_key_()
             key = self.key_encoder(key)
             key = nn.functional.normalize(key, dim=1)
         # (N, 128)
@@ -66,11 +67,12 @@ class MoCo(nn.Module):
         labels = torch.zeros(logits.size(0)).long().to(
             logits.device)  # 0번이 positive니까
 
-        self.dequeue_and_enqueue(key)
-        return logits, labels
+        self.dequeue_and_enqueue_(key)
+        loss = self.criterion(logits, labels)
+        return loss
 
     @torch.no_grad()
-    def dequeue_and_enqueue(self, keys):
+    def dequeue_and_enqueue_(self, keys):
         batch_size = keys.size(0)
 
         assert self.queue_size % batch_size == 0
@@ -82,26 +84,22 @@ class MoCo(nn.Module):
         self.queue_ptr[0] = ptr
 
     @torch.no_grad()
-    def update_key(self):
+    def update_key_(self):
         for param_q, param_k in zip(self.encoder.parameters(), self.key_encoder.parameters()):
             param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)
 
-    def save_model(self, output):
-        torch.save(self.encoder, output)
 
-
-class RotNet(nn.Module):
+class RotNet(Framework):
     def __init__(self, device, args):
-        super().__init__()
-        self.encoder = load_model(args.model, class_num=4)
-        self.encoder = self.encoder.to(device)
-
+        model = load_model(args.model, class_num=4)
+        super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
         dim_mlp = self.encoder.out.weight.shape[1]
         self.encoder.out = nn.Sequential(
             nn.Linear(dim_mlp, dim_mlp),
             nn.ReLU(),
             nn.Linear(dim_mlp, 4),
         )
+        self.encoder = self.encoder.to(device)
 
     def forward(self, x, _):
         # (batch, 3, 32, 32)
@@ -118,18 +116,15 @@ class RotNet(nn.Module):
         # (batch*4, 3, 32, 32)
         output = self.encoder(arr)
         # (batch*4, 4)
-        return output, label
-
-    def save_model(self, output):
-        torch.save(self.encoder, output)
+        loss = self.criterion(output, label)
+        return loss
 
 
-class Simclr(nn.Module):
+class Simclr(Framework):
     def __init__(self, device, args, dim=128, tau=0.07):
-        super().__init__()
+        model = load_model(args.model, class_num=128)
+        super().__init__(model, criterion=nn.CrossEntropyLoss(), device=device)
         self.tau = tau
-        self.encoder = load_model(args.model, class_num=128)
-        self.encoder = self.encoder.to(device)
 
         dim_mlp = self.encoder.out.weight.shape[1]
         self.encoder.out = nn.Sequential(
@@ -137,6 +132,7 @@ class Simclr(nn.Module):
             nn.ReLU(),
             nn.Linear(dim_mlp, dim),
         )
+        self.encoder = self.encoder.to(device)
 
     def forward(self, query, key):
         # query, key -> (batch, 3, 32, 32)
@@ -157,7 +153,8 @@ class Simclr(nn.Module):
                           torch.arange(0, query.size(0))], dim=0)
         label = label.to(query.device)
         # (2*batch, batch)가 나옴
-        return logit, label
+        loss = self.criterion(logit, label)
+        return loss
 
     def save_model(self, output):
         torch.save(self.encoder, output)

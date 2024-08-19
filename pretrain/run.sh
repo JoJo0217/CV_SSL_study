@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
-    --pretrain simclr \
+    --pretrain moco \
     --model convnext \
     --dataset cifar10 \
     --optimizer adamw \
@@ -9,5 +9,5 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --T_max 200 \
     --batch_size 128 \
     --logging_step 1 \
-    --epoch 200 \
-    --logdir ./log_simclr_convnext_0.01/ \
+    --epoch 1 \
+    --logdir ./log_moco_convnext_0.01/ \
