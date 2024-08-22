@@ -245,13 +245,13 @@ class SimSiam(Framework):
         p1 = self.predictor(z1)
         p2 = self.predictor(z2)
 
-        loss = (self.loss_(p1, z2.detach()) / 2) + (self.loss_(p2, z1.detach()) / 2)
+        loss = -(self.loss_(p1, z2.detach()) + self.loss_(p2, z1.detach())) / 2
         return loss.mean()
 
     def loss_(self, x1, x2):
-        x1 = F.normalize(x1, dim=-1, p=2)
-        x2 = F.normalize(x2, dim=-1, p=2)
-        return -(x1 * x2).sum(dim=-1)
+        x1 = F.normalize(x1, dim=1, p=2)
+        x2 = F.normalize(x2, dim=1, p=2)
+        return (x1 * x2).sum(dim=1).mean()
 
 
 TRAINERS = {
