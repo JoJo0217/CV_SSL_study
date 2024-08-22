@@ -27,7 +27,7 @@ def eval_model(model, dataloader, device):
     acc = 0
     for idx, data in tqdm(enumerate(dataloader, start=0)):
         inputs, labels = data[0].to(device), data[1].to(device)
-        outputs = model(inputs)
+        outputs = model.evaluate(inputs)
         output = torch.argmax(outputs, dim=1)
         acc += torch.sum(output == labels).item()
     return acc / len(dataloader.dataset)
@@ -36,8 +36,6 @@ def eval_model(model, dataloader, device):
 @torch.no_grad()
 def eval_pretrain_model(model, trainloader, dataloader, device, in_train=True):
     acc = 0
-    if in_train is True:
-        model = model.encoder
     train_feature = []
     train_labels = []
     print("make train feature")
@@ -64,6 +62,18 @@ def eval_pretrain_model(model, trainloader, dataloader, device, in_train=True):
     return acc / len(dataloader.dataset)
 
 
+# framework 안쓰고 모델을 바로 평가할 때 사용
+@torch.no_grad()
+def evaluate_model(model, dataloader, device):
+    acc = 0
+    for idx, data in tqdm(enumerate(dataloader, start=0)):
+        inputs, labels = data[0].to(device), data[1].to(device)
+        outputs = model(inputs)
+        output = torch.argmax(outputs, dim=1)
+        acc += torch.sum(output == labels).item()
+    return acc / len(dataloader.dataset)
+
+
 if __name__ == "__main__":
 
     args = parse_args()
@@ -73,9 +83,9 @@ if __name__ == "__main__":
     model_loaded.to(device)
     if args.pretrain is False:
 
-        testloader = load_data(name=args.dataset, root=args.data_path,
+        testloader = load_data(name=args.dataset, basic_transform=True, root=args.data_path,
                                train=False, batch_size=args.batch_size)
-        print("acc: ", eval_model(model_loaded, testloader, device))
+        print("acc: ", evaluate_model(model_loaded, testloader, device))
     else:
         trainloader = load_data(name=args.dataset, root=args.data_path,
                                 train=True, basic_transform=True, drop_last=True, batch_size=args.batch_size)

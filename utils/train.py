@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from tqdm import tqdm
 from utils.logger import Logger
 from utils.evaluate import eval_model, eval_pretrain_model
@@ -16,9 +17,6 @@ def train(
         device=None, logging_step=None,
         logger=None, scheduler=None, scheduer_type=None,
         grad_clip=None, is_pretrain=None, pretrainloader=None):
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model.to(device)
     if logger is None:
         logger = Logger(None)
 
@@ -33,17 +31,9 @@ def train(
         total_loss = 0
         model.train()
         for idx, data in tqdm(enumerate(trainloader, start=0)):
-            labels = data[1].to(device)
 
             optimizer.zero_grad()
-
-            if is_pretrain is not None:
-                inputs = [d.to(device) for d in data[0]]
-                outputs, labels = model(inputs[0], inputs[1])
-            else:
-                inputs = data[0].to(device)
-                outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            loss = model(data)
             loss.backward()
 
             if grad_clip is not None:
@@ -80,3 +70,29 @@ def train(
             logger.log(global_step, epoch=iter, loss=total_loss,
                        lr=optimizer.param_groups[0]["lr"])
     return model
+
+
+class Framework(nn.Module):
+    def __init__(self, encoder, criterion=nn.CrossEntropyLoss(), device=None):
+        super().__init__()
+        self.encoder = encoder
+        self.criterion = criterion
+        self.device = device
+
+    def forward(self, batch):
+        x, y = batch
+        x = x.to(self.device)
+        y = y.to(self.device)
+        pred = self.encoder(x)
+        return self.criterion(pred, y)
+
+    def evaluate(self, x):
+        x = x.to(self.device)
+        return self.encoder(x)
+
+    def extract_features(self, x):
+        x = x.to(self.device)
+        return self.encoder.extract_features(x)
+
+    def save(self, path):
+        torch.save(self.encoder, path)

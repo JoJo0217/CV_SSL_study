@@ -1,6 +1,6 @@
 CUDA_VISIBLE_DEVICES=0 python3 main.py \
-    --pretrain simclr \
-    --model convnext \
+    --pretrain simsiam \
+    --model resnet18 \
     --dataset cifar10 \
     --optimizer adamw \
     --lr 0.003 \
@@ -10,4 +10,4 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py \
     --batch_size 128 \
     --logging_step 1 \
     --epoch 200 \
-    --logdir ./log_simclr_convnext_0.01/ \
+    --logdir ./log_simsiam_resnet18_0.01/ \

@@ -36,6 +36,8 @@ pretrain 구현 목록입니다.
 - moco
 - rotnet
 - simclr
+- byol
+- simsiam
 
 ---
 학습한 모델을 테스트하기 위해서는 evaluate.py 코드를 활용할 수 있습니다.

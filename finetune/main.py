@@ -9,7 +9,7 @@ import torch
 from utils.logger import Logger
 from utils.model import load_model
 from utils.dataset import load_data
-from utils.train import train
+from utils.train import train, Framework
 from utils.optim import load_optimizer, load_criterion, load_scheduler
 
 
@@ -67,6 +67,7 @@ def main():
     # train
     logger = Logger(args.logdir)
     logger.log(0, is_tensor_board=False, **vars(args))
+    model = Framework(model, criterion=criterion, device=device)
     print("start training")
     model = train(
         model,
@@ -75,6 +76,7 @@ def main():
         args.epoch,
         trainloader,
         testloader,
+        device=device,
         logging_step=args.logging_step,
         logger=logger,
         scheduler=scheduler,
@@ -84,7 +86,7 @@ def main():
     print("finish training")
 
     print("saving...")
-    torch.save(model, args.output)
+    model.save(args.output)
     print("save success")
     return None
 
