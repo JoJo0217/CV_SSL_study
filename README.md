@@ -1,4 +1,4 @@
-# AI 학습 repository입니다.
+# Computer vision, Self-Superviesd learning 학습 repository입니다.
 
 대부분의 모델, 학습 논문은 [블로그](https://velog.io/@jojo0217/posts)를 참조하시면 볼 수 있습니다.
 
